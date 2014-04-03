@@ -9,13 +9,16 @@ from dipy.core.ndindex import ndindex
 
 
 def tenseur(dmri, gtab):
-	dmri = nib.load('dmri.nii')
+
+	dmri = nib.load(dmri)
 	data = dmri.get_data()
 
-	print 'Forme de dmri.nii:', data.shape
-	gtab = np.ndfromtxt('gradient_directions_b-values.txt')[1:]
+	print 'Forme de dmri:', data.shape
+	gtab = np.ndfromtxt(gtab)[1:]
 	S0 = data[..., 0]
 	S = data[..., 1:]
 
+	B = gtab
+
 	for index in ndindex(data.shape[:3]):
-		X = -(1 / gtab[:, 3]) * np.log( S[index] / S0[index] )
+		X = -(1 / gtab[:, 3].astype(float)) * np.log( S[index].astype(float) / S0[index].astype(float) )
