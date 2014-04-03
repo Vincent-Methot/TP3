@@ -1,19 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""TP3, question 3, IMN530"""
+"""TP3, question 2, IMN530"""
 
 import nibabel as nib
 import numpy as np
+from dipy.core.ndindex import ndindex
 
-dmri = nib.load('dmri.nii')
-data = dmri.get_data()
-hdr = dmri.get_header()
 
-print 'Forme de dmri.nii:', data.shape
+def tenseur(dmri, gtab):
+	dmri = nib.load('dmri.nii')
+	data = dmri.get_data()
 
-fichier = open('gradient_directions_b-values.txt')
-gradients = fichier.read()
-gradients = gradients.split('\n')[:-1]
-gradients = [s.split('\t') for s in gradients]
-gradients = np.array(gradients)[:,:-1]
+	print 'Forme de dmri.nii:', data.shape
+	gtab = np.ndfromtxt('gradient_directions_b-values.txt')[1:]
+	S0 = data[..., 0]
+	S = data[..., 1:]
+
+	for index in ndindex(data.shape[:3]):
+		X = -(1 / gtab[:, 3]) * np.log( S[index] / S0[index] )
