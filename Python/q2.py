@@ -6,6 +6,7 @@
 import nibabel as nib
 import numpy as np
 from dipy.core.ndindex import ndindex
+import pdb
 
 
 def tenseur(dmri, gtab):
@@ -40,3 +41,31 @@ def tenseur(dmri, gtab):
 
     tenseur[np.isinf(tenseur) | np.isnan(tenseur)] = 0
     return tenseur
+
+
+def compAdcAndFa(tensMat):
+    """ Fonction qui calcule l'ADC et la fa d'une matrice 3D comprenant des
+    tenseurs de diffusion à chaque index."""
+
+    adcMap = np.zeros(tensMat.shape[:3])
+    faMap = np.zeros(tensMat.shape[:3])
+
+    for idx in ndindex(tensMat.shape[:3]):
+        dLin = tensMat[idx]
+        eigv = compLinDTensorEigval(dLin)
+        adcMap[idx] = eigv.sum() / 3
+        faMap[idx] = np.sqrt(3/2*((eigv-eigv.mean())**2).sum()/(eigv**2).sum())
+
+    return adcMap, faMap
+
+
+def compLinDTensorEigval(dLin):
+    pdb.set_trace()
+    dLin2MatIdx = np.array([[True, True, True],
+                            [False, True, True],
+                            [False, False, True]])
+    dt = np.zeros([3, 3])
+    dt[dLin2MatIdx] = dLin
+    eigv = np.linalg.eigvalsh(dt, UPLO='U')
+
+    return eigv
