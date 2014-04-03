@@ -44,8 +44,18 @@ def tenseur(dmri, gtab):
 
 
 def compAdcAndFa(tensMat):
-    """ Fonction qui calcule l'ADC et la fa d'une matrice 3D comprenant des
-    tenseurs de diffusion à chaque index."""
+    """ Calcul de l'ADC et de la FA d'une matrice 3D comprenant des
+    tenseurs de diffusion à chaque index.
+
+    Paramètres
+    ----------
+    tensMat:nparray. Matrice MxNxPx6 comprenant les tenseurs
+
+    Retour
+    ------
+    adcMap: nparray. Matrice MxNxP de l'ADC a chaque voxel
+    faMap: nparray. Matrice MxNxP de la FA a chaque voxel"""
+
 
     adcMap = np.zeros(tensMat.shape[:3])
     faMap = np.zeros(tensMat.shape[:3])
@@ -59,13 +69,32 @@ def compAdcAndFa(tensMat):
     return adcMap, faMap
 
 
-def compLinDTensorEigval(dLin):
-    pdb.set_trace()
+def compLinDTensorEigval(dLin, compEigVec=False):
+    """Calcul des valeurs propres d'un tenseur symétrique T 3x3 exprimé sous
+    la forme d'un vecteur V 6x1 tel que V[0]=T[0,0], V[1]=T[0,1], V[2]=T[0,2],
+    V[3]=T[1,1], V[4]=T[1,2], V[5]=T[2,2]
+
+    Paramètres
+    ----------
+    dLin:nparray. Tenseur 1x6
+
+    Retour
+    ------
+    eigv: nparray. Valeurs propres du tenseurs
+    """
     dLin2MatIdx = np.array([[True, True, True],
                             [False, True, True],
                             [False, False, True]])
     dt = np.zeros([3, 3])
     dt[dLin2MatIdx] = dLin
-    eigv = np.linalg.eigvalsh(dt, UPLO='U')
 
-    return eigv
+    if ~compEigVec:
+        return np.linalg.eigvalsh(dt, UPLO='U')
+    else:
+        return np.linalg.eigh(dt, UPLO='U')
+
+
+def tracking(tensMat):
+    """Tracking déterministe de fibre dans la matrice de tenseurs tensMat."""
+
+    # Détermination du masque de la matière blanche
