@@ -6,6 +6,7 @@
 import nibabel as nib
 import numpy as np
 from dipy.core.ndindex import ndindex
+import pdb
 
 
 def tenseur(dmri, gtab):
@@ -52,19 +53,18 @@ def compAdcAndFa(tensMat):
         dLin = tensMat[idx]
         eigv = compLinDTensorEigval(dLin)
         adcMap[idx] = eigv.sum() / 3
-        mEigv = eigv.mean()
         faMap[idx] = np.sqrt(3/2*((eigv-eigv.mean())**2).sum()/(eigv**2).sum())
 
     return adcMap, faMap
 
 
-
-def compDiffTenEigval(dLin):
-    dLin2MatIdx = np.array([[True, False, False],
-                            [True, True, False],
-                            [True, True, True]])
-    d = np.zeros(3, 3)
-    d[dLin2MatIdx] = dLin
-    eigv = np.linalg.eigvalsh(d)
+def compLinDTensorEigval(dLin):
+    pdb.set_trace()
+    dLin2MatIdx = np.array([[True, True, True],
+                            [False, True, True],
+                            [False, False, True]])
+    dt = np.zeros([3, 3])
+    dt[dLin2MatIdx] = dLin
+    eigv = np.linalg.eigvalsh(dt, UPLO='U')
 
     return eigv
