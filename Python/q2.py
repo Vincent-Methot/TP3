@@ -35,7 +35,8 @@ def tenseur(dmri, gtab):
         if S0[index] == 0:
             tenseur[index] = np.zeros(6)
         else:
-            X = -(1 / gtab[:, 3].astype(float)) * ( np.log( S[index] ) - np.log( S0[index] ) )
-            tenseur[index] = np.dot(np.linalg.pinv(B), X)
+            X = -(1 / gtab[:, 3].astype(float)) * ( np.log( S[index].astype(float) / S0[index].astype(float) ) )
+            tenseur[index] = np.dot( np.linalg.pinv(B), X )
 
+    tenseur[np.isinf(tenseur) | np.isnan(tenseur)] = 0
     return tenseur
