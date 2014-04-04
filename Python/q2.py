@@ -60,7 +60,6 @@ def compAdcAndFa(tensMat):
 
 
 def compLinDTensorEigval(dLin):
-    pdb.set_trace()
     dLin2MatIdx = np.array([[True, True, True],
                             [False, True, True],
                             [False, False, True]])
