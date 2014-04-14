@@ -3,6 +3,10 @@
 
 """TP3, question 2, IMN530. Par Jérémie Fouquet et Vincent Méthot"""
 
+
+
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 import nibabel as nib
 import numpy as np
 from dipy.core.ndindex import ndindex
@@ -41,7 +45,8 @@ def tenseur(dmri, gtab):
         if S0[index] == 0:
             tenseur[index] = np.zeros(6)
         else:
-            X = -(1 / gtab[:, 3].astype(float)) * ( np.log( S[index].astype(float) / S0[index].astype(float) ))
+            X = -((1 / gtab[:, 3].astype(float)) * 
+                ( np.log( S[index].astype(float) / S0[index].astype(float) )))
             tenseur[index] = np.dot( np.linalg.pinv(B), X )
 
     tenseur[np.isinf(tenseur) | np.isnan(tenseur)] = 0
@@ -104,4 +109,4 @@ def compLinDTensorEigval(dLin, compEigVec=False):
 def tracking(tensMat):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat."""
 
-    # Détermination du masque de la matière blanche
+    # Détermination du masque de la matière blanche   
