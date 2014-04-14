@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""TP3, question 2, IMN530"""
+"""TP3, question 2, IMN530. Par Jérémie Fouquet et Vincent Méthot"""
 
 import nibabel as nib
 import numpy as np
@@ -19,7 +19,12 @@ def tenseur(dmri, gtab):
 
     Retour
     ------
-    tenseur: nparray contenant les tenseurs à chaque voxel"""
+    tenseur: nparray contenant les tenseurs à chaque voxel
+
+    Example
+    -------
+    >> tenseur = q2.tenseur('Data/dmri.nii', 
+                 '../Data/gradient_directions_b-values.txt')"""
 
     dmri = nib.load(dmri)
     data = dmri.get_data()
@@ -36,9 +41,8 @@ def tenseur(dmri, gtab):
         if S0[index] == 0:
             tenseur[index] = np.zeros(6)
         else:
-            X = -(1 / gtab[:, 3].astype(float)) * 
-                ( np.log( S[index].astype(float) / 
-                    S0[index].astype(float) ) )
+            X = -((1 / gtab[:, 3].astype(float)) * 
+                ( np.log( S[index].astype(float) / S0[index].astype(float) )))
             tenseur[index] = np.dot( np.linalg.pinv(B), X )
 
     tenseur[np.isinf(tenseur) | np.isnan(tenseur)] = 0
@@ -66,7 +70,8 @@ def compAdcAndFa(tensMat):
         dLin = tensMat[idx]
         eigv = compLinDTensorEigval(dLin)
         adcMap[idx] = eigv.sum() / 3
-        faMap[idx] = np.sqrt(3/2*((eigv-eigv.mean())**2).sum()/(eigv**2).sum())
+        faMap[idx] = np.sqrt(3/2*((eigv-eigv.mean())**2).sum() / 
+                     (eigv**2).sum())
 
     return adcMap, faMap
 
@@ -100,4 +105,4 @@ def compLinDTensorEigval(dLin, compEigVec=False):
 def tracking(tensMat):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat."""
 
-    # Détermination du masque de la matière blanche
+    # Détermination du masque de la matière blanche   
