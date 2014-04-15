@@ -12,11 +12,15 @@
 
 \section{IRM fonctionnelle}
 
-\subsection{Reconstruction}
-
-
+Plusieurs outils de traitement et d'analyse existent pour traiter les données issues de l'IRMf. Nous avons choisis de les utiliser directement plutôt que de les implémenter en python. Deux suites logicielles ont retenu notre intérêt, soit FSL [http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/] et AFNI [http://afni.nimh.nih.gov/], qu'il faudra avoir installé pour faire fonctionner le script associé à ce numéro (Q1_IRMf.sh).
 
 \subsection{Étapes de reconstruction}
+
+Il faut garder à l'esprit qu'à chaque étape de reconstruction, il est fortement conseillé d'inspecter visuellement les données. Dès leur réception, on a visuellement inspecté plusieurs tranches de \emph{fmri.nii} à plusieurs temps pour s'assurer que les artéfacts n'était pas trop important et que la correction de mouvement n'était pas nécessaire, comme mentionné dans la question. De plus, nous avons effectué une transformée de Fourier des séries temporelles.
+
+% Faire plein de figures pour montrer les observations...
+
+
 
 \subsection{Segmentation}
 
