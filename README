@@ -3,8 +3,7 @@ TP3
 
 TP3 - Jérémie Fouquet et Vincent Méthot - Cours IMN530 - UdeS
 
-Les scripts bash (Q1_IRMf.sh et Q3_Fusion.sh) sont écrits de telle sorte qu'ils doivent être lancés
-à partir du dossier racine (TP3).
+Les scripts bash (Q1_IRMf.sh et Q3_Fusion.sh) sont écrits de telle sorte qu'ils doivent être lancés à partir de leur location (i.e, le dossier racine - TP3).
 
 
 À faire:
