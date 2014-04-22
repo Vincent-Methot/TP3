@@ -6,6 +6,7 @@
 import nibabel as nib
 import numpy as np
 from dipy.core.ndindex import ndindex
+from dipy.segment.mask import median_otsu
 import pdb
 
 
@@ -23,7 +24,7 @@ def tenseur(dmri, gtab):
 
     Example
     -------
-    >> tenseur = q2.tenseur('Data/dmri.nii', 
+    >> tenseur = q2.tenseur('Data/dmri.nii',
                  '../Data/gradient_directions_b-values.txt')"""
 
     dmri = nib.load(dmri)
@@ -41,7 +42,7 @@ def tenseur(dmri, gtab):
         if S0[index] == 0:
             tenseur[index] = np.zeros(6)
         else:
-            X = -((1 / gtab[:, 3].astype(float)) * 
+            X = -((1 / gtab[:, 3].astype(float)) *
                 ( np.log( S[index].astype(float) / S0[index].astype(float) )))
             tenseur[index] = np.dot( np.linalg.pinv(B), X )
 
@@ -104,4 +105,19 @@ def compLinDTensorEigval(dLin, compEigVec=False):
 def tracking(tensMat):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat."""
 
-    # Détermination du masque de la matière blanche   
+
+def segmentwhitematter(im, fa):
+    """ Détermination du masque de la matière blanche à partir d'une image
+    anatomique (im) et d'une image de la FA (fa). """
+
+    # 1 Segmentation du cerveau à partir de l'image anatomique
+    imBMasked, bMask = median_otsu(im, 2, 1)
+
+    # 2. Seuil sur la fa
+    faTh = np.median(fa[bMask])
+    faMask = (fa < faTh)
+
+    # 3. Intersection des deux masques
+    finMask = bMask & faMask
+
+    return finMask
