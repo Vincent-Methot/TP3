@@ -56,15 +56,15 @@ def compAdcAndFa(tensMat):
     adcMap: nparray. Matrice MxNxP de l'ADC a chaque voxel
     faMap: nparray. Matrice MxNxP de la FA a chaque voxel"""
 
-
-    adcMap = np.zeros(tensMat.shape[:3])
+    adcMap = np.zeros(tensMat. shape[:3])
     faMap = np.zeros(tensMat.shape[:3])
 
     for idx in ndindex(tensMat.shape[:3]):
         dLin = tensMat[idx]
         eigv = compLinDTensorEigval(dLin)
         adcMap[idx] = eigv.sum() / 3
-        faMap[idx] = np.sqrt(3/2*((eigv-eigv.mean())**2).sum()/(eigv**2).sum())
+        faMap[idx] = np.sqrt(3 / 2 * ((eigv - eigv.mean()) ** 2).sum() /
+                     (eigv ** 2).sum())
 
     return adcMap, faMap
 
