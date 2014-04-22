@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""TP3, question 2, IMN530"""
+"""TP3, question 2, IMN530. Par Jérémie Fouquet et Vincent Méthot"""
 
 import nibabel as nib
 import numpy as np
@@ -19,24 +19,30 @@ def tenseur(dmri, gtab):
 
     Retour
     ------
-    tenseur: nparray contenant les tenseurs à chaque voxel"""
+    tenseur: nparray contenant les tenseurs à chaque voxel
+
+    Example
+    -------
+    >> tenseur = q2.tenseur('Data/dmri.nii', 
+                 '../Data/gradient_directions_b-values.txt')"""
 
     dmri = nib.load(dmri)
     data = dmri.get_data()
 
-    print 'Forme de dmri:', data.shape
     gtab = np.ndfromtxt(gtab)[1:]
     S0 = data[..., 0]
     S = data[..., 1:]
 
-    B = np.array([ gtab[:,0]**2, gtab[:,0]*gtab[:,1], gtab[:,0]*gtab[:,2], gtab[:,1]**2, gtab[:,1]*gtab[:,2], gtab[:,2]**2 ]).T
+    B = np.array([ gtab[:,0]**2, gtab[:,0]*gtab[:,1], gtab[:,0]*gtab[:,2],
+                   gtab[:,1]**2, gtab[:,1]*gtab[:,2], gtab[:,2]**2 ]).T
     tenseur = np.empty(data.shape[:3] + (6,))
 
     for index in ndindex(data.shape[:3]):
         if S0[index] == 0:
             tenseur[index] = np.zeros(6)
         else:
-            X = -(1 / gtab[:, 3].astype(float)) * ( np.log( S[index].astype(float) / S0[index].astype(float) ) )
+            X = -((1 / gtab[:, 3].astype(float)) * 
+                ( np.log( S[index].astype(float) / S0[index].astype(float) )))
             tenseur[index] = np.dot( np.linalg.pinv(B), X )
 
     tenseur[np.isinf(tenseur) | np.isnan(tenseur)] = 0
@@ -56,7 +62,8 @@ def compAdcAndFa(tensMat):
     adcMap: nparray. Matrice MxNxP de l'ADC a chaque voxel
     faMap: nparray. Matrice MxNxP de la FA a chaque voxel"""
 
-    adcMap = np.zeros(tensMat. shape[:3])
+
+    adcMap = np.zeros(tensMat.shape[:3])
     faMap = np.zeros(tensMat.shape[:3])
 
     for idx in ndindex(tensMat.shape[:3]):
@@ -97,4 +104,4 @@ def compLinDTensorEigval(dLin, compEigVec=False):
 def tracking(tensMat):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat."""
 
-    # Détermination du masque de la matière blanche
+    # Détermination du masque de la matière blanche   
