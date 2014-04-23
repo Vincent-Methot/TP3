@@ -10,13 +10,14 @@ from dipy.segment.mask import median_otsu
 import pdb
 
 
-def tenseur(dmri, gtab):
+def tenseur(dmri, gtab, bMaskSource=None):
     """Estimation des tenseurs par méthode des moindres carrés.
 
     Paramètres
     ----------
     dmri: Fichier nifti contenant une image d'IRM de diffusion
     gtab: Table des gradients utilisée
+    bMaskSource: Fichier nifti contenant un masque binaire du cerveau.
 
     Retour
     ------
@@ -27,6 +28,7 @@ def tenseur(dmri, gtab):
     >> tenseur = q2.tenseur('Data/dmri.nii',
                  '../Data/gradient_directions_b-values.txt')"""
 
+    # Chargement des données et déclaration de variables
     dmri = nib.load(dmri)
     data = dmri.get_data()
 
@@ -34,11 +36,22 @@ def tenseur(dmri, gtab):
     S0 = data[..., 0]
     S = data[..., 1:]
 
-    B = np.array([ gtab[:,0]**2, gtab[:,0]*gtab[:,1], gtab[:,0]*gtab[:,2],
-                   gtab[:,1]**2, gtab[:,1]*gtab[:,2], gtab[:,2]**2 ]).T
+    B = np.array([gtab[:, 0] ** 2, gtab[:, 0] * gtab[:, 1],
+                  gtab[:, 0] * gtab[:, 2], gtab[:, 1] ** 2,
+                  gtab[:, 1] * gtab[:, 2], gtab[:, 2] ** 2]).T
     tenseur = np.empty(data.shape[:3] + (6,))
 
-    for index in ndindex(data.shape[:3]):
+    # Définition des indices d'itération en fonction du masque de cerveau
+    if not(bMaskSource):
+        itIdx = ndindex(data.shape[:3])
+    else:
+        bMask = nib.load(bMaskSource)
+        bMask = bMask.get_data()
+        itIdx = bMask.nonzero()
+        itIdx = list(zip(itIdx[0], itIdx[1], itIdx[2]))
+
+    # Calcul des tenseurs en tous les indices définis précédemment
+    for index in itIdx:
         if S0[index] == 0:
             tenseur[index] = np.zeros(6)
         else:
@@ -50,24 +63,36 @@ def tenseur(dmri, gtab):
     return tenseur
 
 
-def compAdcAndFa(tensMat):
+def compAdcAndFa(tensMat, bMaskSource=None):
     """ Calcul de l'ADC et de la FA d'une matrice 3D comprenant des
     tenseurs de diffusion à chaque index.
 
     Paramètres
     ----------
     tensMat:nparray. Matrice MxNxPx6 comprenant les tenseurs
+    bMaskSource: Fichier nifti contenant un masque pour lequel l'ADC et la FA
+    seront calculées (généralement un masque de cerveau).
 
     Retour
     ------
     adcMap: nparray. Matrice MxNxP de l'ADC a chaque voxel
     faMap: nparray. Matrice MxNxP de la FA a chaque voxel"""
 
-
+    # Initialisation des variables de résultat
     adcMap = np.zeros(tensMat.shape[:3])
     faMap = np.zeros(tensMat.shape[:3])
 
-    for idx in ndindex(tensMat.shape[:3]):
+    # Définition des indices d'itération en fonction du masque de cerveau
+    if not(bMaskSource):
+        itIdx = ndindex(tensMat.shape[:3])
+    else:
+        bMask = nib.load(bMaskSource)
+        bMask = bMask.get_data()
+        itIdx = bMask.nonzero()
+        itIdx = list(zip(itIdx[0], itIdx[1], itIdx[2]))
+
+    # Calcul des cartes de FA et d'ADC
+    for idx in itIdx:
         dLin = tensMat[idx]
         eigv = compLinDTensorEigval(dLin)
         adcMap[idx] = eigv.sum() / 3
@@ -102,22 +127,53 @@ def compLinDTensorEigval(dLin, compEigVec=False):
         return np.linalg.eigh(dt, UPLO='U')
 
 
-def tracking(tensMat):
-    """Tracking déterministe de fibre dans la matrice de tenseurs tensMat."""
+def tracking(tensMat, nSeed=10000, wmMaskSource=None, bMaskSource=None,
+             fa=None):
+    """Tracking déterministe de fibre dans la matrice de tenseurs tensMat, dans
+    un masque de matière blanche wmMaskSource (fichier nifti).
+
+    Paramètres
+    ----------
+    tensMat: nparray MxNxPx6 contenant les tenseurs de diffusion
+    nSeed: int. Nombre de seeds placées aléatoirement dans la matière blanche
+    wmMaskSource: Fichier nifti contenant un masque binaire de la matière
+        blanche. Si None, le masque est calculé à partir des param. restants.
+    bMaskSource: Fichier nifti contenant un masque binaire MxNxP du cerveau
+        (utilisé seulement si wmMaskSource=None).
+    fa: nparray MxNxP contenant la FA (utilisé seulement si wmMaskSource=None)
+    """
 
 
-def segmentwhitematter(im, fa):
-    """ Détermination du masque de la matière blanche à partir d'une image
-    anatomique (im) et d'une image de la FA (fa). """
+    # 1. Détermination du masque de la matiere blanche
+    if not(wmMaskSource):
+        wmMask = nib.load(wmMaskSource)
+        wmMask = wmMask.get_data()
+    else:
+        wmMask = segmentwhitematter(bMaskSource, fa)
 
-    # 1 Segmentation du cerveau à partir de l'image anatomique
-    imBMasked, bMask = median_otsu(im, 2, 1)
+    # 2. Détermination des coordonnées des seeds
+    seedPts = wmMask.nonzero()
+    seedIdx = np.random.permutation(seedPts[0].size)
+    seedIdx = list(seedIdx[range(nSeed)])
+    seedPts = list(zip(seedPts[0][seedIdx], seedPts[1][seedIdx],
+                   seedPts[2][seedIdx]))
+    seedPts = np.random.permutation
 
-    # 2. Seuil sur la fa
+
+def segmentwhitematter(bMaskSource, fa):
+    """ Détermination du masque de la matière blanche à partir d'un masque
+    du cerveau (fichier nifti) et d'un seuil sur la FA. """
+
+    # Ouverture du fichier du masque du cerveau
+    bMask = nib.load(bMaskSource)
+    bMask = bMask.get_data()
+
+    # Seuil sur la fa
     faTh = np.median(fa[bMask])
     faMask = (fa < faTh)
 
-    # 3. Intersection des deux masques
-    finMask = bMask & faMask
+    # Intersection des deux masques
+    wmMask = bMask & faMask
 
-    return finMask
+    return wmMask
+
