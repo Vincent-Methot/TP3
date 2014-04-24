@@ -5,6 +5,7 @@
 
 import nibabel as nib
 import numpy as np
+import scipy as sp
 from dipy.core.ndindex import ndindex
 from dipy.segment.mask import median_otsu
 import pdb
@@ -56,8 +57,8 @@ def tenseur(dmri, gtab, bMaskSource=None):
             tenseur[index] = np.zeros(6)
         else:
             X = -((1 / gtab[:, 3].astype(float)) *
-                ( np.log( S[index].astype(float) / S0[index].astype(float) )))
-            tenseur[index] = np.dot( np.linalg.pinv(B), X )
+                (np.log(S[index].astype(float) / S0[index].astype(float))))
+            tenseur[index] = np.dot(np.linalg.pinv(B), X)
 
     tenseur[np.isinf(tenseur) | np.isnan(tenseur)] = 0
     return tenseur
@@ -94,7 +95,7 @@ def compAdcAndFa(tensMat, bMaskSource=None):
     # Calcul des cartes de FA et d'ADC
     for idx in itIdx:
         dLin = tensMat[idx]
-        eigv = compLinDTensorEigval(dLin)
+        eigv = compLinDTensorEigv(dLin)
         adcMap[idx] = eigv.sum() / 3
         faMap[idx] = np.sqrt(3 / 2 * ((eigv - eigv.mean()) ** 2).sum() /
                      (eigv ** 2).sum())
@@ -102,7 +103,7 @@ def compAdcAndFa(tensMat, bMaskSource=None):
     return adcMap, faMap
 
 
-def compLinDTensorEigval(dLin, compEigVec=False):
+def compLinDTensorEigv(dLin, compEigVec=False):
     """Calcul des valeurs propres d'un tenseur symétrique T 3x3 exprimé sous
     la forme d'un vecteur V 6x1 tel que V[0]=T[0,0], V[1]=T[0,1], V[2]=T[0,2],
     V[3]=T[1,1], V[4]=T[1,2], V[5]=T[2,2]
@@ -121,20 +122,20 @@ def compLinDTensorEigval(dLin, compEigVec=False):
     dt = np.zeros([3, 3])
     dt[dLin2MatIdx] = dLin
 
-    if ~compEigVec:
-        return np.linalg.eigvalsh(dt, UPLO='U')
-    else:
+    if compEigVec:
         return np.linalg.eigh(dt, UPLO='U')
+    else:
+        return np.linalg.eigvalsh(dt, UPLO='U')
 
 
-def tracking(tensMat, nSeed=10000, wmMaskSource=None, bMaskSource=None,
-             fa=None):
+def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource=None, fa=None):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat, dans
     un masque de matière blanche wmMaskSource (fichier nifti).
 
     Paramètres
     ----------
     tensMat: nparray MxNxPx6 contenant les tenseurs de diffusion
+    trackStep: float. Facteur multiplicatif qui dicte la longueur des pas.
     nSeed: int. Nombre de seeds placées aléatoirement dans la matière blanche
     wmMaskSource: Fichier nifti contenant un masque binaire de la matière
         blanche. Si None, le masque est calculé à partir des param. restants.
@@ -143,21 +144,71 @@ def tracking(tensMat, nSeed=10000, wmMaskSource=None, bMaskSource=None,
     fa: nparray MxNxP contenant la FA (utilisé seulement si wmMaskSource=None)
     """
 
-
     # 1. Détermination du masque de la matiere blanche
-    if not(wmMaskSource):
+    if wmMaskSource:
         wmMask = nib.load(wmMaskSource)
         wmMask = wmMask.get_data()
     else:
         wmMask = segmentwhitematter(bMaskSource, fa)
 
-    # 2. Détermination des coordonnées des seeds
+    # 2. Détermination aléatoire des coordonnées des seeds
     seedPts = wmMask.nonzero()
     seedIdx = np.random.permutation(seedPts[0].size)
     seedIdx = list(seedIdx[range(nSeed)])
     seedPts = list(zip(seedPts[0][seedIdx], seedPts[1][seedIdx],
                    seedPts[2][seedIdx]))
-    seedPts = np.random.permutation
+
+    # 3. Tracking
+    nextTens = np.zeros(6,)
+    minAngleCos = np.cos(np.pi / 3)
+    allPts = []
+    for iSeed in range(nSeed):
+        actualPt = seedPts[iSeed]
+        ptList = [np.array(actualPt)]
+        actualEva, actualEve = compLinDTensorEigv(tensMat[actualPt[0],actualPt[1],actualPt[2], :], compEigVec=True)
+        maxEvaIdx = actualEva.argmax()
+        # Boucle sur les 2 directions possibles à partir de la seed
+        for iDir in range(2):
+            actualDir = actualEve[maxEvaIdx]
+            if iDir == 1:
+                actualDir = -actualDir
+            continueTrack = True
+            outOfMask = False
+            maxAngleReached = False
+            while continueTrack:
+                # On avance d'un pas
+                nextPt = actualPt + actualDir * trackStep
+                # On regarde si on sort du masque
+                if not(wmMask[tuple(np.round(nextPt).astype(int))]):
+                    outOfMask = True
+                    break
+                # On évalue la nouvelle direction
+                for iTens in range(6):
+                    interpPt = np.array([nextPt])
+                    nextTens[iTens] = sp.ndimage.map_coordinates(tensMat[...,iTens], interpPt.T)
+                nextEva, nextEve = compLinDTensorEigv(tensMat[nextPt[0],nextPt[1],nextPt[2], :],
+                                                          compEigVec=True)
+                maxEvaIdx = nextEva.argmax()
+                nextDir = nextEve[maxEvaIdx]
+                # On vérifie l'angle entre l'ancienne et la nouvelle direction
+                if np.dot(nextDir, actualDir) < 0:
+                    nextDir = -nextDir
+                if np.dot(nextDir, actualDir) < minAngleCos:
+                    maxAngleReached = True
+                    break
+                continueTrack = not(outOfMask | maxAngleReached)
+                # On met à jour et sauvegarde le point de tracking
+                actualPt = nextPt
+                actualDir = nextDir
+                if iDir == 0:
+                    ptList = ptList + [np.array(actualPt)]
+                else:
+                    ptList = [np.array(actualPt)] + ptList
+
+        # Stockage des points trouvés pour la seed
+        allPts = allPts + [np.array(ptList)]
+
+    return allPts
 
 
 def segmentwhitematter(bMaskSource, fa):
@@ -169,7 +220,7 @@ def segmentwhitematter(bMaskSource, fa):
     bMask = bMask.get_data()
 
     # Seuil sur la fa
-    faTh = np.median(fa[bMask])
+    faTh = np.median(fa[bMask.astype(bool)])
     faMask = (fa < faTh)
 
     # Intersection des deux masques
