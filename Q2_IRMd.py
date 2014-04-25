@@ -128,7 +128,7 @@ def compLinDTensorEigv(dLin, compEigVec=False):
         return np.linalg.eigvalsh(dt, UPLO='U')
 
 
-def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource=None, fa=None):
+def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource=None, fa=None, saveTracks = False, trackHdr = None):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat, dans
     un masque de matière blanche wmMaskSource (fichier nifti).
 
@@ -208,6 +208,17 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource
         # Stockage des points trouvés pour la seed
         allPts = allPts + [np.array(ptList)]
 
+        if saveTracks:
+            streamlines_trk = ((sl, None, None) for sl in allPts)
+            # Construct header
+            print 'Saving fibers in trk format...'
+            hdr = nib.trackvis.empty_header()
+            hdr['voxel_size'] = trackHdr.get_zooms()[:3]
+            hdr['voxel_order'] = 'LAS'
+            hdr['dim'] = tensMat.shape[:3]
+            hdr['n_count'] = len(allPts)
+            nib.trackvis.write(saveTracks, streamlines_trk, hdr, points_space='voxel')
+
     return allPts
 
 
@@ -221,10 +232,36 @@ def segmentwhitematter(bMaskSource, fa):
 
     # Seuil sur la fa
     faTh = np.median(fa[bMask.astype(bool)])
-    faMask = (fa < faTh)
+    faTh = 0.15
+    faMask = (fa > faTh)
 
     # Intersection des deux masques
     wmMask = bMask & faMask
 
     return wmMask
 
+
+def compmainevec(tensMat, bMaskSource=None):
+    """Calcul du vecteur propre avec la plus grande valeur propre à chaque
+    position du champ de tenseur tensMat"""
+
+    # Initialisation des variables de résultat
+    mainVec = np.zeros(tensMat.shape[:3] + (3,))
+
+    # Définition des indices d'itération en fonction du masque de cerveau
+    if not(bMaskSource):
+        itIdx = ndindex(tensMat.shape[:3])
+    else:
+        bMask = nib.load(bMaskSource)
+        bMask = bMask.get_data()
+        itIdx = bMask.nonzero()
+        itIdx = list(zip(itIdx[0], itIdx[1], itIdx[2]))
+
+    # Calcul du vecteur propre principal
+    for idx in itIdx:
+        dLin = tensMat[idx]
+        eva, eve = compLinDTensorEigv(dLin, compEigVec=True)
+        mainEvIdx = eva.argmax()
+        mainVec[idx] = eve[mainEvIdx]
+
+    return mainVec
