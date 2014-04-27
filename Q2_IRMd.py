@@ -128,7 +128,7 @@ def compLinDTensorEigv(dLin, compEigVec=False):
         return np.linalg.eigvalsh(dt, UPLO='U')
 
 
-def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource=None, fa=None, saveTracks = False, trackHdr = None):
+def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource=None, fa=None, saveTracksFname=None, trackHdr=None):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat, dans
     un masque de matière blanche wmMaskSource (fichier nifti).
 
@@ -163,13 +163,16 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource
     minAngleCos = np.cos(np.pi / 3)
     allPts = []
     for iSeed in range(nSeed):
+        # Affichage du no de seed
+        print("{}{}".format("Seed ", iSeed))
+        # Initialisation de la direction de tracking
         actualPt = seedPts[iSeed]
         ptList = [np.array(actualPt)]
         actualEva, actualEve = compLinDTensorEigv(tensMat[actualPt[0],actualPt[1],actualPt[2], :], compEigVec=True)
         maxEvaIdx = actualEva.argmax()
         # Boucle sur les 2 directions possibles à partir de la seed
         for iDir in range(2):
-            actualDir = actualEve[maxEvaIdx]
+            actualDir = actualEve[:,maxEvaIdx]
             if iDir == 1:
                 actualDir = -actualDir
             continueTrack = True
@@ -189,7 +192,7 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource
                 nextEva, nextEve = compLinDTensorEigv(tensMat[nextPt[0],nextPt[1],nextPt[2], :],
                                                           compEigVec=True)
                 maxEvaIdx = nextEva.argmax()
-                nextDir = nextEve[maxEvaIdx]
+                nextDir = nextEve[:, maxEvaIdx]
                 # On vérifie l'angle entre l'ancienne et la nouvelle direction
                 if np.dot(nextDir, actualDir) < 0:
                     nextDir = -nextDir
@@ -208,16 +211,17 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource
         # Stockage des points trouvés pour la seed
         allPts = allPts + [np.array(ptList)]
 
-        if saveTracks:
-            streamlines_trk = ((sl, None, None) for sl in allPts)
-            # Construct header
-            print 'Saving fibers in trk format...'
-            hdr = nib.trackvis.empty_header()
-            hdr['voxel_size'] = trackHdr.get_zooms()[:3]
-            hdr['voxel_order'] = 'LAS'
-            hdr['dim'] = tensMat.shape[:3]
-            hdr['n_count'] = len(allPts)
-            nib.trackvis.write(saveTracks, streamlines_trk, hdr, points_space='voxel')
+    # Save trakcs in .trk file if file name is provided
+    if saveTracksFname:
+        streamlines_trk = ((sl, None, None) for sl in allPts)
+        # Construct header
+        print 'Saving fibers in trk format...'
+        hdr = nib.trackvis.empty_header()
+        hdr['voxel_size'] = trackHdr.get_zooms()[:3]
+        hdr['voxel_order'] = 'LAS'
+        hdr['dim'] = tensMat.shape[:3]
+        hdr['n_count'] = len(allPts)
+        nib.trackvis.write(saveTracksFname, streamlines_trk, hdr, points_space='voxel')
 
     return allPts
 
@@ -262,6 +266,6 @@ def compmainevec(tensMat, bMaskSource=None):
         dLin = tensMat[idx]
         eva, eve = compLinDTensorEigv(dLin, compEigVec=True)
         mainEvIdx = eva.argmax()
-        mainVec[idx] = eve[mainEvIdx]
+        mainVec[idx] = eve[:, mainEvIdx]
 
     return mainVec
