@@ -46,7 +46,7 @@ def tenseur(dmri, gtab):
             tenseur[index] = np.dot( np.linalg.pinv(B), X )
 
     tenseur[np.isinf(tenseur) | np.isnan(tenseur)] = 0
-    return tenseur
+    return tenseur.astype('f32')
 
 
 def compAdcAndFa(tensMat):
@@ -73,7 +73,7 @@ def compAdcAndFa(tensMat):
         faMap[idx] = np.sqrt(3 / 2 * ((eigv - eigv.mean()) ** 2).sum() /
                      (eigv ** 2).sum())
 
-    return adcMap, faMap
+    return adcMap.astype('f32'), faMap.astype('f32')
 
 
 def compLinDTensorEigval(dLin, compEigVec=False):
