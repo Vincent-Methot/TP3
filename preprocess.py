@@ -6,10 +6,12 @@ dmri = nib.load('Data/dmri.nii')
 data = dmri.get_data()
 hdr = dmri.get_header()
 affine = dmri.get_affine()
+data_dtype = dmri.get_data_dtype()
 b0 = data[...,0]
 B0 = nib.Nifti1Image(b0, affine)
 nib.save(B0, 'Data/b0.nii.gz')
 
+# Extraction du cerveau dans fsl
 # bet Data/b0.nii.gz Data/b0_bet.nii.gz -m
 
 mask = nib.load('Data/b0_bet_mask.nii.gz').get_data()
@@ -19,8 +21,8 @@ data_brain = np.empty(data.shape)
 for i in range(data.shape[-1]):
 	data_brain[..., i] = data[..., i] * mask
 
-dmri_brain = nib.Nifti1Image(data_brain, affine, hdr)
-nib.save(dmri_brain, 'Data/dmri_brain.nii.gz')
+dmri_brain = nib.Nifti1Image(data_brain.astype(data_dtype), affine)
+nib.save(dmri_brain.set_data_dtype(data_dtype), 'Data/dmri_brain.nii.gz')
 
 # Création de dmri_petit et dmri_mini
 
