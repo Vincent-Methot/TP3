@@ -35,7 +35,7 @@ nib.save(dmri_mini, 'Data/dmri_mini.nii.gz')
 
 # Calcul des tenseurs, FA et ADC
 
-tenseur_mini = Q2_IRMd.tenseur('Data/dmri_mini.nii.gz', 'Data/gradient_directions_b-values.txt')
+tenseur_mini = Q2_IRMd.tenseur('Data/dmri_mini.nii.gz','Data/gradient_directions_b-values.txt')
 tenseur_petit = Q2_IRMd.tenseur('Data/dmri_petit.nii.gz', 'Data/gradient_directions_b-values.txt')
 tenseur = Q2_IRMd.tenseur('Data/dmri.nii', 'Data/gradient_directions_b-values.txt')
 
@@ -43,9 +43,9 @@ nib.save(nib.Nifti1Image(tenseur_mini, affine), 'Data/tenseur_mini.nii.gz')
 nib.save(nib.Nifti1Image(tenseur_petit, affine), 'Data/tenseur_petit.nii.gz')
 nib.save(nib.Nifti1Image(tenseur, affine), 'Data/tenseur.nii.gz')
 
-FA_mini, ADC_mini = Q2_IRMd.compAdcAndFa(tenseur_mini)
-FA_petit, ADC_petit = Q2_IRMd.compAdcAndFa(tenseur_petit)
-FA, ADC = Q2_IRMd.compAdcAndFa(tenseur)
+ADC_mini, FA_mini = Q2_IRMd.compAdcAndFa(tenseur_mini)
+ADC_petit, FA_petit = Q2_IRMd.compAdcAndFa(tenseur_petit)
+ADC, FA = Q2_IRMd.compAdcAndFa(tenseur)
 
 nib.save(nib.Nifti1Image(FA_mini, affine), 'Data/FA_mini.nii.gz')
 nib.save(nib.Nifti1Image(FA_petit, affine), 'Data/FA_petit.nii.gz')
@@ -55,3 +55,7 @@ nib.save(nib.Nifti1Image(ADC_petit, affine), 'Data/ADC_petit.nii.gz')
 nib.save(nib.Nifti1Image(ADC, affine), 'Data/ADC.nii.gz')
 
 # Tracking...
+
+allPts = Q2_IRMd.tracking(tenseur, bMaskSource='Data/b0_bet_mask.nii.gz',
+						  fa='Data/FA.nii.gz', verbose=False,
+						  saveTracksFname='Data/tracks.trk')
