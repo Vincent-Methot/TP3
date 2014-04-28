@@ -46,8 +46,7 @@ def tenseur(dmri, gtab, bMaskSource=None):
     if not(bMaskSource):
         itIdx = ndindex(data.shape[:3])
     else:
-        bMask = nib.load(bMaskSource)
-        bMask = bMask.get_data()
+        bMask = openimage(bMaskSource)
         itIdx = bMask.nonzero()
         itIdx = list(zip(itIdx[0], itIdx[1], itIdx[2]))
 
@@ -128,7 +127,10 @@ def compLinDTensorEigv(dLin, compEigVec=False):
         return np.linalg.eigvalsh(dt, UPLO='U')
 
 
-def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource=None, fa=None, saveTracksFname=None, trackHdr=None):
+def tracking(tensMat, trackStep=0.5, nSeed=10000, faTh=0.15, maxAngle=np.pi/3,
+             splineOrder=1, wmMaskSource=None, bMaskSource=None, fa=None,
+             saveTracksFname=None, trackHdr=None, verbose=True,
+             dataToInterp='tens'):
     """Tracking déterministe de fibre dans la matrice de tenseurs tensMat, dans
     un masque de matière blanche wmMaskSource (fichier nifti).
 
@@ -137,42 +139,59 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource
     tensMat: nparray MxNxPx6 contenant les tenseurs de diffusion
     trackStep: float. Facteur multiplicatif qui dicte la longueur des pas.
     nSeed: int. Nombre de seeds placées aléatoirement dans la matière blanche
+    faTh: float. Threshold sur la FA pour déterminer où faire le tracking.
+    maxAngl: float. Angle entre deux directions de tracking successives
+    au-dessus duquel le tracking est arrêté.
     wmMaskSource: Fichier nifti contenant un masque binaire de la matière
         blanche. Si None, le masque est calculé à partir des param. restants.
     bMaskSource: Fichier nifti contenant un masque binaire MxNxP du cerveau
         (utilisé seulement si wmMaskSource=None).
     fa: nparray MxNxP contenant la FA (utilisé seulement si wmMaskSource=None)
+    saveTracksFname: String. Nom d'un fichier .trk dans lequel les tracks
+    trouvées vont être sauvegardées
+    trackHdr: nifti header (nibabel). Header duquel des infos sont prises pour
+    sauvegarder les tracks. Si None, pour l'instant hdr['voxel_size']=(1,1,1).
+
+    Retour
+    ------
+    allPts: Les points des streamlines trouvés pour toutes les seeds, sous la
+    forme d'une liste de longueur nSeed contenant des nparrray nbOfPts x 3.
     """
 
     # 1. Détermination du masque de la matiere blanche
     if wmMaskSource:
-        wmMask = nib.load(wmMaskSource)
-        wmMask = wmMask.get_data()
+        wmMask = openimage(wmMaskSource)
     else:
-        wmMask = segmentwhitematter(bMaskSource, fa)
+        wmMask = segmentwhitematter(bMaskSource, fa, faTh)
 
-    # 2. Détermination aléatoire des coordonnées des seeds
+    # 2. Calcul des informations nécessaires en fonction de ce que l'on veut
+    # interpoler. À voir si le temps le permet!
+
+    # 3. Détermination aléatoire des coordonnées des seeds
     seedPts = wmMask.nonzero()
+    np.random.seed(1) # Seulement utilisé pour des fins d'optimisation. À enlever par la suite.
     seedIdx = np.random.permutation(seedPts[0].size)
-    seedIdx = list(seedIdx[range(nSeed)])
+    seedIdx = list(seedIdx[list(range(nSeed))])
     seedPts = list(zip(seedPts[0][seedIdx], seedPts[1][seedIdx],
                    seedPts[2][seedIdx]))
 
-    # 3. Tracking
+    # 4. Tracking
     nextTens = np.zeros(6,)
-    minAngleCos = np.cos(np.pi / 3)
+    minAngleCos = np.cos(maxAngle)
     allPts = []
     for iSeed in range(nSeed):
         # Affichage du no de seed
-        print("{}{}".format("Seed ", iSeed))
+        if verbose:
+            print(("{}{}".format("Seed ", iSeed)))
         # Initialisation de la direction de tracking
         actualPt = seedPts[iSeed]
         ptList = [np.array(actualPt)]
-        actualEva, actualEve = compLinDTensorEigv(tensMat[actualPt[0],actualPt[1],actualPt[2], :], compEigVec=True)
+        actualEva, actualEve = compLinDTensorEigv(tensMat[actualPt[0],
+                                actualPt[1], actualPt[2], :], compEigVec=True)
         maxEvaIdx = actualEva.argmax()
         # Boucle sur les 2 directions possibles à partir de la seed
         for iDir in range(2):
-            actualDir = actualEve[:,maxEvaIdx]
+            actualDir = actualEve[:, maxEvaIdx]
             if iDir == 1:
                 actualDir = -actualDir
             continueTrack = True
@@ -186,10 +205,18 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource
                     outOfMask = True
                     break
                 # On évalue la nouvelle direction
-                for iTens in range(6):
+                if splineOrder == 'nearest':
+                    interpPt = np.round(nextPt).astype(int)
+                    nextTens = tensMat[interpPt[0], interpPt[1],
+                                       interpPt[2], ...]
+                else:
                     interpPt = np.array([nextPt])
-                    nextTens[iTens] = sp.ndimage.map_coordinates(tensMat[...,iTens], interpPt.T)
-                nextEva, nextEve = compLinDTensorEigv(tensMat[nextPt[0],nextPt[1],nextPt[2], :],
+                    for iTens in range(6):
+                        nextTens[iTens] = sp.ndimage.map_coordinates(
+                                            tensMat[..., iTens], interpPt.T,
+                                            order=splineOrder)
+                nextEva, nextEve = compLinDTensorEigv(tensMat[nextPt[0],
+                                    nextPt[1], nextPt[2], :],
                                                           compEigVec=True)
                 maxEvaIdx = nextEva.argmax()
                 nextDir = nextEve[:, maxEvaIdx]
@@ -215,28 +242,30 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, wmMaskSource=None, bMaskSource
     if saveTracksFname:
         streamlines_trk = ((sl, None, None) for sl in allPts)
         # Construct header
-        print 'Saving fibers in trk format...'
+        print('Saving fibers in trk format...')
         hdr = nib.trackvis.empty_header()
-        hdr['voxel_size'] = trackHdr.get_zooms()[:3]
+        if not(trackHdr):
+            hdr['voxel_size'] = trackHdr.get_zooms()[:3]
+        else:
+            hdr['voxel_size'] = (1, 1, 1)
         hdr['voxel_order'] = 'LAS'
         hdr['dim'] = tensMat.shape[:3]
         hdr['n_count'] = len(allPts)
-        nib.trackvis.write(saveTracksFname, streamlines_trk, hdr, points_space='voxel')
+        nib.trackvis.write(saveTracksFname, streamlines_trk, hdr,
+                            points_space='voxel')
 
     return allPts
 
 
-def segmentwhitematter(bMaskSource, fa):
+def segmentwhitematter(bMaskSource, fa, faTh=0.15):
     """ Détermination du masque de la matière blanche à partir d'un masque
     du cerveau (fichier nifti) et d'un seuil sur la FA. """
 
     # Ouverture du fichier du masque du cerveau
-    bMask = nib.load(bMaskSource)
-    bMask = bMask.get_data()
+    bMask = openimage(bMaskSource)
 
     # Seuil sur la fa
-    faTh = np.median(fa[bMask.astype(bool)])
-    faTh = 0.15
+    #faTh = np.median(fa[bMask.astype(bool)])
     faMask = (fa > faTh)
 
     # Intersection des deux masques
@@ -251,13 +280,14 @@ def compmainevec(tensMat, bMaskSource=None):
 
     # Initialisation des variables de résultat
     mainVec = np.zeros(tensMat.shape[:3] + (3,))
+    allEve = np.zeros(tensMat.shape[:3] + (3,3))
+    allEva = np.zeros(tensMat.shape[:3] + (3,))
 
     # Définition des indices d'itération en fonction du masque de cerveau
     if not(bMaskSource):
         itIdx = ndindex(tensMat.shape[:3])
     else:
-        bMask = nib.load(bMaskSource)
-        bMask = bMask.get_data()
+        bMask = openimage(bMaskSource)
         itIdx = bMask.nonzero()
         itIdx = list(zip(itIdx[0], itIdx[1], itIdx[2]))
 
@@ -267,5 +297,19 @@ def compmainevec(tensMat, bMaskSource=None):
         eva, eve = compLinDTensorEigv(dLin, compEigVec=True)
         mainEvIdx = eva.argmax()
         mainVec[idx] = eve[:, mainEvIdx]
+        allEve = eve
+        allEva = eva
 
-    return mainVec
+    return mainVec, allEve, allEva
+
+
+def openimage(im):
+    """Fonction permettant de transformer mask en nparray. Mask peut être un
+    nparray, un fichier nifti, ou une liste."""
+
+    if isinstance(im, str):
+        data = (nib.load(im)).get_data()
+    else:
+        data = np.array(im)
+
+    return data
