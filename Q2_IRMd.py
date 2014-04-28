@@ -141,14 +141,14 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, faTh=0.15, maxAngle=np.pi/3,
     nSeed: int. Nombre de seeds placées aléatoirement dans la matière blanche
     faTh: float. Threshold sur la FA pour déterminer où faire le tracking.
     maxAngl: float. Angle entre deux directions de tracking successives
-    au-dessus duquel le tracking est arrêté.
+        au-dessus duquel le tracking est arrêté.
     wmMaskSource: Fichier nifti contenant un masque binaire de la matière
         blanche. Si None, le masque est calculé à partir des param. restants.
     bMaskSource: Fichier nifti contenant un masque binaire MxNxP du cerveau
         (utilisé seulement si wmMaskSource=None).
     fa: nparray MxNxP contenant la FA (utilisé seulement si wmMaskSource=None)
     saveTracksFname: String. Nom d'un fichier .trk dans lequel les tracks
-    trouvées vont être sauvegardées
+        trouvées vont être sauvegardées
     trackHdr: nifti header (nibabel). Header duquel des infos sont prises pour
     sauvegarder les tracks. Si None, pour l'instant hdr['voxel_size']=(1,1,1).
 
@@ -156,6 +156,12 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, faTh=0.15, maxAngle=np.pi/3,
     ------
     allPts: Les points des streamlines trouvés pour toutes les seeds, sous la
     forme d'une liste de longueur nSeed contenant des nparrray nbOfPts x 3.
+
+    Exemple
+    -------
+    >> allPts = Q2_IRMd.tracking(tenseur, bMaskSource='Data/b0_bet_mask.nii.gz',
+                                 fa='Data/FA.nii.gz', verbose=False,
+                                 saveTracksFname='Data/tracks.trk')
     """
 
     # 1. Détermination du masque de la matiere blanche
@@ -238,13 +244,13 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, faTh=0.15, maxAngle=np.pi/3,
         # Stockage des points trouvés pour la seed
         allPts = allPts + [np.array(ptList)]
 
-    # Save trakcs in .trk file if file name is provided
+    # Save trakcs in .trk file if file name is provided (par Maxime Descoteaux)
     if saveTracksFname:
         streamlines_trk = ((sl, None, None) for sl in allPts)
         # Construct header
         print('Saving fibers in trk format...')
         hdr = nib.trackvis.empty_header()
-        if not(trackHdr):
+        if trackHdr:
             hdr['voxel_size'] = trackHdr.get_zooms()[:3]
         else:
             hdr['voxel_size'] = (1, 1, 1)
@@ -258,7 +264,7 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, faTh=0.15, maxAngle=np.pi/3,
 
 
 def segmentwhitematter(bMaskSource, fa, faTh=0.15):
-    """ Détermination du masque de la matière blanche à partir d'un masque
+    """ Détermine le masque de la matière blanche à partir d'un masque
     du cerveau (fichier nifti) et d'un seuil sur la FA. """
 
     # Ouverture du fichier du masque du cerveau
