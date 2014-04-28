@@ -34,6 +34,18 @@ Il faut garder à l'esprit qu'à chaque étape de reconstruction, il est forteme
 \section{IRM de diffusion}
 
 \subsection{Estimation des tenseurs}
+La fonction \lstinline{Q2_IRMd.tenseur} utilise la méthode de la pseudo-inverse pour effectuer le calcul des tenseurs. Elle peut prendre en entrée un masque qui indique pour quels voxels calculer les tenseurs. Sont également mis à 0 tous les éléments de tenseurs qui:
+\begin{enumerate}
+\item Correspondent à un signal à $b=0$ nul.
+\item Prennent une valeur NaN ou Inf. 
+\end{enumerate}
+La fig. \ref{tenseur_fiber} illustre les tenseurs que nous avons ainsi obtenus sur une carte de FA (calculée grâce à l'alogrithme présenté dans la section suivante).
+\begin{figure}
+\begin{center}
+%\includegraphics[scale=1]{tenseur_fiber}
+\caption{Illustration dans le Fibernavigator des tenseurs que nous avons obtenus grâce à la fonction \lstinline{Q2_IRMd.tenseur}. Les tenseurs sont superposés à la FA. À noter que seule une région identifiée comme étant le cerveau grâce à l'algorithme \lstinline{BET} de FSL est présentée. \label{tenseur_fiber}}
+\end{center}
+\end{figure}
 
 \subsection{FA et ADC}
 

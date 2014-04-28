@@ -162,6 +162,11 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, faTh=0.15, maxAngle=np.pi/3,
     if wmMaskSource:
         wmMask = openimage(wmMaskSource)
     else:
+        if not(fa):
+            dum, fa = compAdcAndFa(tensMat, bMaskSource)
+            del dum
+            # Il resterait à implémenter une façon de calculer un masque du
+            # cerveau si bMaskSource == None.
         wmMask = segmentwhitematter(bMaskSource, fa, faTh)
 
     # 2. Calcul des informations nécessaires en fonction de ce que l'on veut
