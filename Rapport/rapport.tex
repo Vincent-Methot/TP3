@@ -48,23 +48,17 @@ La fig. \ref{tenseurs_fiber} illustre les tenseurs que nous avons ainsi obtenus 
 \end{figure}
 
 \subsection{FA et ADC}
-La fonction \lstinline{Q2_IRMd.compAdcAndFa} calcule l'ADC et la FA à partir d'un champ de tenseur tel que calculé par la fonction \lstinline{Q2_IRMd.tenseur}. Les fig. \ref{adc_fiber} et \ref{fa_fiber} illustrent pour certaines tranches l'ADC et la FA, respectivement. Les unités de l'ADC sont les mêmes que celles du coefficients de diffusion, soit $[longueur]^2/[temps]$, et la FA est sans unité.
+La fonction \lstinline{Q2_IRMd.compAdcAndFa} calcule l'ADC et la FA à partir d'un champ de tenseur tel que calculé par la fonction \lstinline{Q2_IRMd.tenseur}. La fig. \ref{adc_fa} illustre pour certaines tranches l'ADC et la FA, respectivement. Les unités de l'ADC sont les mêmes que celles du coefficients de diffusion, soit $[longueur]^2/[temps]$, alors que la FA est sans unité.
 
 \begin{figure}
 \begin{center}
-\includegraphics[scale=0.22]{adc_fiber}
-\caption{ADC visualisée dans le Fibernavigator. \label{adc_fiber}}
-\end{center}
-\end{figure}
-
-\begin{figure}
-\begin{center}
-\includegraphics[scale=0.22]{fa_fiber}
-\caption{FA visualisée dans le Fibernavigator. \label{fa_fiber}}
+\includegraphics[scale=0.9]{adc_fa}
+\caption{ADC et FA pour une tranche axiale du volume d'IRMd.\label{adc_fa}}
 \end{center}
 \end{figure}
 
 \subsection{Tractographie}
+La fonction \lstinline{Q2_IRMd.tracking} effectue une tractographie sur un champ de tenseurs. Lors de l'écriture de la fonction, nous avons remarqué
 
 \section{Fusion}
 

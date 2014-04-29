@@ -43,7 +43,7 @@ def tenseur(dmri, gtab, bMaskSource=None):
     tenseur = np.empty(data.shape[:3] + (6,))
 
     # Définition des indices d'itération en fonction du masque de cerveau
-    if not(bMaskSource):
+    if (bMaskSource is None) | (bMaskSource is False):
         itIdx = ndindex(data.shape[:3])
     else:
         bMask = openimage(bMaskSource)
@@ -83,11 +83,10 @@ def compAdcAndFa(tensMat, bMaskSource=None):
     faMap = np.zeros(tensMat.shape[:3])
 
     # Définition des indices d'itération en fonction du masque de cerveau
-    if not(bMaskSource):
+    if (bMaskSource is None) | (bMaskSource is False):
         itIdx = ndindex(tensMat.shape[:3])
     else:
-        bMask = nib.load(bMaskSource)
-        bMask = bMask.get_data()
+        bMask = openimage(bMaskSource)
         itIdx = bMask.nonzero()
         itIdx = list(zip(itIdx[0], itIdx[1], itIdx[2]))
 
@@ -295,7 +294,7 @@ def compmainevec(tensMat, bMaskSource=None):
     allEva = np.zeros(tensMat.shape[:3] + (3,))
 
     # Définition des indices d'itération en fonction du masque de cerveau
-    if not(bMaskSource):
+    if (bMaskSource is None) | (bMaskSource is False):
         itIdx = ndindex(tensMat.shape[:3])
     else:
         bMask = openimage(bMaskSource)
