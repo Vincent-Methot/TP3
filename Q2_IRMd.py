@@ -5,9 +5,9 @@
 
 import nibabel as nib
 import numpy as np
-import scipy as sp
+from scipy.ndimage import map_coordinates
 from dipy.core.ndindex import ndindex
-from dipy.segment.mask import median_otsu
+# from dipy.segment.mask import median_otsu
 import pdb
 
 
@@ -218,9 +218,8 @@ def tracking(tensMat, trackStep=0.5, nSeed=10000, faTh=0.15, maxAngle=np.pi/3,
                 else:
                     interpPt = np.array([nextPt])
                     for iTens in range(6):
-                        nextTens[iTens] = sp.ndimage.map_coordinates(
-                                            tensMat[..., iTens], interpPt.T,
-                                            order=splineOrder)
+                        nextTens[iTens] = map_coordinates(tensMat[..., iTens], 
+                                            interpPt.T, order=splineOrder)
                 nextEva, nextEve = compLinDTensorEigv(tensMat[nextPt[0],
                                     nextPt[1], nextPt[2], :],
                                                           compEigVec=True)
