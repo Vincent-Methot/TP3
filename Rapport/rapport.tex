@@ -16,15 +16,34 @@ Plusieurs outils d'analyse existent pour traiter des données d'IRMf. Nous avons
 
 \subsection{Étapes de reconstruction}
 
-Il faut garder à l'esprit qu'à chaque étape de reconstruction, il est fortement conseillé d'inspecter visuellement les données. Dès leur réception, on a visuellement inspecté plusieurs tranches de \emph{fmri.nii} à plusieurs temps pour s'assurer que les artéfacts n'étaient pas trop important et que la correction de mouvement n'était pas nécessaire (voir Fig. \ref{fmri_anatomist}, comme mentionné dans la question. De plus, nous avons effectué une transformée de Fourier des séries temporelles.
+Il faut garder à l'esprit qu'à chaque étape de reconstruction, il est fortement conseillé d'inspecter visuellement les données. Dès leur réception, on a visuellement inspecté plusieurs tranches de \emph{fmri.nii} à tous les temps pour s'assurer que les artéfacts n'étaient pas trop important et que la correction de mouvement n'était pas nécessaire (voir Fig. \ref{fmri_anatomist}), comme mentionné dans la question. De plus, nous avons effectué une transformée de Fourier des séries temporelles (voir Fig. \ref{fmri_fft}).
 
 \begin{figure}[h]
    \caption{\label{fmri_anatomist} Inspection visuelle de fmri.nii dans anatomist. On peut inspecter plusieurs tranches pour tous les points temporels à l'aide des deux curseurs à droite, comme dans un film.}
-   \includegraphics[width=0.7\textwidth]{fmri_anatomist}
+   \centering
+   \includegraphics[width=\textwidth]{fmri_anatomist}
 \end{figure}
 
-% Faire plein de figures pour montrer les observations...
+\begin{figure}[h]
+   \caption{\label{fmri_fft} Coupe sagitale de la transformée de Fourier de fmri.nii à chaque point. Une fréquence près de 0.02 Hz (la fréquence fondamentale du stimulus) est affichée dans AFNI. Les zones blanches peuvent être dues à de l'activation cérébrale mais aussi (et surtout) à un effet de bord relié à du mouvement.}
+   \centering
+   \includegraphics[width=\textwidth]{fmri_fft}
+\end{figure}
 
+Les étapes de reconstruction suivantes furent appliquées sur les données d'IRMf. Le résultat de chacune est illustrée sur la Fig. \ref{fmri_reconstruction}.
+
+\begin{itemize}
+	\item[A] Lissage spatial : pour augmenter le rapport signal sur bruit, on procède à un débuitage gaussien de toute l'image.
+	% Il y aurait avantage à utiliser un filtrage bilatéral, ou quelque chose de plus poussé...
+	\item[B] Filtrage temporel : du bruit et des artéfacts de nature physiologique se retrouvent aux hautes fréquences. Nous avous décidé de couper les fréquences supérieures à 0.06 Hz (sachant que notre signal idéal à un fréquence fondamentale de 0.02 Hz) de chacune de nos séries temporelles. 
+	\item[C] Corrélation point à point : on corrèle le signal dans chaque voxel avec le signal idéal (contenu dans le fichier Data/ideal.txt) pour en tirer une carte de coefficients de corrélatoin entre -1 et 1. On pourra ensuite seuiller cette carte pour obtenir un masque binaire des zones d'activations.
+\end{itemize}
+
+\begin{figure}[h]
+   \caption{\label{fmri_reconstruction} A - Image originelle. B - Séries temporelles pour quelques voxels adjacents de l'image originelle. C - Image débruitée (convolution avec une gaussienne de FWHM = 6mm). D - Série temporelle débruitée. E - Image après passage d'une filtre passe-bas. La valeur moyenne (fréquence nulle) représentant l'information structurelle est perdue. F - Série temporelle de l'image filtrée. G - Corrélation point à point (seuillé à $\rho > 0.5$). H - Séries temporelles pour quelques voxels adjacents de l'image reconstruite. Position du point sélectionné: x = 22, y = 13, z = 24. Les séries temporelles rouge représentent le signal idée. Celles en noir représentent le signal mesuré/transformées.}
+   \centering
+   \includegraphics[height=0.85\textheight]{fmri_reconstruction}
+\end{figure}
 
 
 \subsection{Segmentation}
