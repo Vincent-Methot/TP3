@@ -121,6 +121,35 @@ Direction du vecteur principal & 2 & 0 & \textcolor{green}{Haute} & \textcolor{r
 \section{Fusion}
 
 \subsection{Justification}
+\paragraph{Espace de recalage}Pour choisir l'espace de référence dans lequel effectuer les recalages, nous avons cherché l'espace de l'image qui détenait
+\begin{enumerate}
+\item La meilleure résolution
+\item Le moins d'artéfacts
+\item Le plus haut SNR
+\end{enumerate}
+Nous voulions en effet recaler les images sur celle qui représentait le plus fidèlement et le plus précisément la réalité, ce qui était reflété par ces caractristiques. L'espace choisi a donc évidemment été l'espace de l'image T1.
+
+\paragraph{Outil}
+Tout d'abord, mentionnons que pour l'IRMd, nous avons recalé l'image à $b=0$ sur l'image T1, car c'est elle qui possédait le plus haut SNR et se rapprochait le plus d'une image anatomique habituelle. En IRMf, nous avons recalé la moyenne temporelle du signal sur l'image T1 afin de maximiser le SNR de l'image recalée.  
+
+Ensuite, nous avons choisi le logiciel de recalage ANTS pour la grande variété des possibilités qu'il offre de même que pour sa réputation. Étant donné les différences importantes entre les pondérations des images recalées, les mesures de similarité que nous avons envisagées sont l'information mutuelle (IM) et la corrélation-croisée (CC). 
+
+Pour recaler l'IRMd sur la T1, nous avons d'abord essayé une transformation affine (il est toujours bon d'essayer une méthode plus simple pour commencer). Les résultats étaient déjà relativement prometteurs, mais quelques éléments de l'image ne semblaient pas encore parfaitement recalés, peut-être en raison d'artéfacts (fig. \ref{b0-to-t1}). Nous avons donc essayé quelques combinaisons de recalage non-linéaire qu'offrait ANTS. Après inspection visuelle des résultats, nous avons subjectivement arrêté notre choix sur le recalage avec une CC de rayon 4, une transformation de type élastique avec un pas de gradient de 3, une régularisation gaussienne sur le gradient de la transformation de paramètres 0.5 et 3 et des nombres d'itérations de 30, 20 et 10 sur les échelles de résolution x/4, x/2 et x, avec x la résolution initiale (en langage ANTS, \lstinline{-m CC[...,1,4] -t Elast[3] -i 30x20x10 -r Gauss[0.5,3]}. Les résultats sont illustrés sur la fig. \ref{b0-to-t1}.
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.5]{b0-to-t1}
+\caption{Recalage de l'image d'IRMd à $b=0$ (en rouge) sur l'image T1 à l'aide d'une transformation affine (ligne 2) et d'une transformation non linéaire avec ANTS utilisant les paramètres suivants en langage ANTS: \lstinline{-m CC[...,1,4] -t Elast[3] -i 30x20x10 -r Gauss[0.5,3]}. \label{b0-to-t1}}
+\end{center}
+\end{figure}  
+
+Pour recaler l'IRMf sur la T1, nous avons utiliser la même approche que pour l'IRMd. L'image d'IRMf présentait cependant une résolution spatiale encore plus faible que l'IRMd, et son SNR semblait aussi assez faible. Il était donc plus difficile de qualifier le recalage. Nous avons finalement arrêté notre choix sur la même méthode de recalage non linéaire que pour l'IRMd. Les résultats sont illustrés sur la fig. \ref{fmri-to-t1}
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.5]{fmri-to-t1}
+\caption{Image T1 (rangée 1) et recalage non linéaire de l'image d'IRMf moyennée dans le temps (en rouge, rangée 2) sur l'image T1 effectué avec ANTS avec les paramètres suivants, en langage ANTS: \lstinline{-m CC[...,1,4] -t Elast[3] -i 30x20x10 -r Gauss[0.5,3]}. \label{fmri-to-t1}}
+\end{center}
+\end{figure}  
 
 \subsection{Connectivité des zones fonctionnelles}
 
