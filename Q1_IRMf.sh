@@ -53,3 +53,8 @@ bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
 ##############################################################################
 
 # Partie c - Création de figures
+
+# Calcul de l'image moyenne de fmri.nii pour des fins de visualisation dans
+# le fibernavigator.
+
+3dTstat -mean -prefix Data/fmri_mean.nii.gz Data/fmri_bet.nii.gz 
