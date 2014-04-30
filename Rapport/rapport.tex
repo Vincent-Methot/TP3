@@ -46,9 +46,9 @@ La dernière étape de reconstruction consiste à calculer voxel par voxel une c
 
 On a effectué la segmentation des zones d'activation à l'aide de l'outil graphique d'AFNI, de manière à trouver les paramètres idéaux en fonction des zones qu'on voulait voir activer. Puisque la tâche Roland est une tâche requérant des fonctions motrices, et mémoire et de vision, on s'attend à voir \og allumer \fg~ 6 zones reliées à ces activités. Les tâches motrices sont principalement localisées dans le cortex moteur (gyrus précentral). La mémoire est principalement localisée dans l'hippocampe. La vision est principalement localisée dans le cortex occipital. Nous nous sommes donc servis de nos connaissances anatomiques \emph{a priori} pour réaliser la segmentation et le regroupement des voxels activés (\emph{clustering}).
 
-L'étape de segmentation dans le script \emph{Q1_IRMf.sh} réalise l'opération de seuillage et de regroupement automatiquement, donnant 7 régions distinctes, dont chaqu'une est étiquetée avec une valeur diffénte:
+L'étape de segmentation dans le script \emph{Q1\_IRMf.sh} réalise l'opération de seuillage et de regroupement automatiquement, donnant 7 régions distinctes, dont chaqu'une est étiquetée avec une valeur diffénte:
 	
-\begin{ennumerate}
+\begin{enumerate}
     \item Lobe occipital droit (vision)
     \item Lobe occipital gauche (vision)
     \item Hippocampe gauche (mémoire)
@@ -56,7 +56,7 @@ L'étape de segmentation dans le script \emph{Q1_IRMf.sh} réalise l'opération 
     \item Gyrus précentral droite (mouvement)
     \item Région hors du cerveau (artéfact)
     \item Gyrus précentral gauche (mouvement)
-\end{ennumerate}
+\end{enumerate}
 
 La méthode de segmentation utilisée consiste en un seuillage simple des valeurs de coefficient de corrélation (on ne garde que celles entre 0.5149 et 1), puis le \emph{clustering} de AFNI enlève les voxels n'étant pas regroupés. Plus précisément, les groupes comportant moins de 50 voxels voisins sont mis à zéro.
 

@@ -27,10 +27,10 @@ dmri_brain = nib.Nifti1Image(data_brain.astype(data_dtype), affine)
 nib.save(dmri_brain, 'Data/dmri_brain.nii.gz')
 
 # Création de dmri_petit et dmri_mini
-data_petit = data[30:95, 20:100, 0:55, :]
+data_petit = data_brain[30:95, 20:100, 0:55, :]
 dmri_petit = nib.Nifti1Image(data_petit, affine)
 nib.save(dmri_petit, 'Data/dmri_petit.nii.gz')
-data_mini = data[50:70, 50:70, 20:40, :]
+data_mini = data_brain[50:70, 50:70, 20:40, :]
 dmri_mini = nib.Nifti1Image(data_mini, affine)
 nib.save(dmri_mini, 'Data/dmri_mini.nii.gz')
 
@@ -58,4 +58,4 @@ nib.save(nib.Nifti1Image(ADC, affine), 'Data/ADC.nii.gz')
 
 allPts = Q2_IRMd.tracking(tenseur, bMaskSource='Data/b0_bet_mask.nii.gz',
                           fa='Data/FA.nii.gz', verbose=False,
-                           saveTracksFname='Data/tracks.trk')
+                          saveTracksFname='Data/tracks.trk')
