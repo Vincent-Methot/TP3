@@ -12,22 +12,22 @@
 
 \section{IRM fonctionnelle}
 
-Plusieurs outils d'analyse existent déjà pour traiter des données d'IRMf. Nous avons choisis de les utiliser directement plutôt que de les implémenter en python. Deux suites logicielles ont retenu notre intérêt (puisque nous les connaissons déjà), soit FSL [http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/] et AFNI [http://afni.nimh.nih.gov/], qu'il faudra avoir installé pour faire fonctionner le script associé à ce numéro (Q1\_IRMf.sh).
+Plusieurs outils d'analyse existent déjà pour traiter des données d'IRMf. Nous avons choisis de les utiliser directement plutôt que de les implémenter en python. Deux suites logicielles ont retenu notre intérêt (puisque nous les connaissions déjà), soit FSL [http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/] et AFNI [http://afni.nimh.nih.gov/], qu'il faudra avoir installé pour faire fonctionner le script associé à ce numéro (\lstinline{Q1\_IRMf.sh}).
 
 \subsection{Étapes de reconstruction}
 
 Il faut garder à l'esprit qu'à chaque étape de reconstruction, il est fortement conseillé d'inspecter visuellement les données. Dès leur réception, on a visuellement inspecté plusieurs tranches de \emph{fmri.nii} à tous les temps pour s'assurer que les artéfacts n'étaient pas trop important et que la correction de mouvement n'était pas nécessaire (voir Fig. \ref{fmri_anatomist}), comme mentionné dans la question. De plus, nous avons effectué une transformée de Fourier des séries temporelles (voir Fig. \ref{fmri_fft}).
 
-\begin{figure}[h]
-   \caption{\label{fmri_anatomist} Inspection visuelle de fmri.nii dans anatomist. On peut inspecter plusieurs tranches pour tous les points temporels à l'aide des deux curseurs à droite, comme dans un film.}
+\begin{figure}
    \centering
-   \includegraphics[width=\textwidth]{fmri_anatomist}
+   \includegraphics[width=.7\textwidth]{fmri_anatomist}
+   \caption{\label{fmri_anatomist} Inspection visuelle de fmri.nii dans anatomist. On peut inspecter plusieurs tranches pour tous les points temporels à l'aide des deux curseurs à droite, comme dans un film.}
 \end{figure}
 
-\begin{figure}[h]
-   \caption{\label{fmri_fft} Coupe sagitale de la transformée de Fourier de fmri.nii à chaque point. Une fréquence près de 0.02 Hz (la fréquence fondamentale du stimulus) est affichée dans AFNI. Les zones blanches peuvent être dues à de l'activation cérébrale mais aussi (et surtout) à un effet de bord relié à du mouvement.}
+\begin{figure}
    \centering
-   \includegraphics[width=\textwidth]{fmri_fft}
+   \includegraphics[width=.7\textwidth]{fmri_fft}
+      \caption{\label{fmri_fft} Coupe sagitale de la transformée de Fourier de fmri.nii à chaque point. Une fréquence près de 0.02 Hz (la fréquence fondamentale du stimulus) est affichée dans AFNI. Les zones blanches peuvent être dues à de l'activation cérébrale mais aussi (et surtout) à un effet de bord relié à du mouvement.}
 \end{figure}
 
 Les étapes de reconstruction suivantes furent appliquées sur les données d'IRMf. Le résultat de chacune est illustrée sur la Fig. \ref{fmri_reconstruction}. On y voit sur la première ligne l'image originale (\ref{fmri_reconstruction}A - \emph{fmri.nii}) et les séries temporelles de quelques voxels voisins (\ref{fmri_reconstruction}B). Sur la deuxième ligne, il y a le résultat de la première étape de reconstruction ( \ref{fmri_reconstruction} A \& B \emph{fmri\_smooth.nii.gz}), c'est-à-dire l'image débruitée. Cette étape a pour but d'augmenter le rapport signal sur bruit par une convolution avec une gaussienne de FWHM = 6mm.
@@ -35,18 +35,18 @@ Les étapes de reconstruction suivantes furent appliquées sur les données d'IR
 La troisième ligne montre le résultat du filtrage temporel sur chaque voxel (\ref{fmri_reconstruction}E \emph{fmri\_low.nii.gz}). On voit par le fait même que la valeur moyenne de chaque voxel est fixée à 0, ne laissant que les variations temporelles. Comme du bruit et des artéfacts de nature physiologique se retrouvent aux hautes fréquences, nous avous décidé de couper les fréquences supérieures à 0.06 Hz (sachant que notre signal idéal à un fréquence fondamentale de 0.02 Hz) de chacune de nos séries temporelles (\ref{fmri_reconstruction}F).
 La dernière étape de reconstruction consiste à calculer voxel par voxel une corrélation entre le signal idéal (contenu dans le fichier \emph{Data/ideal.txt}) et mesuré.  On en tire une carte de coefficients de corrélation entre -1 et 1 (\ref{fmri_reconstruction}F). On pourra ensuite seuiller cette carte pour obtenir un masque binaire des zones d'activations. La comparaison entre \ref{fmri_reconstruction}B et \ref{fmri_reconstruction}H montre l'effet du processus de reconstruction sur les données d'IRMf aurant au niveau spatial que temporel.
 
-\begin{figure}[h]
-   \caption{\label{fmri_reconstruction} A - Image originelle. B - Séries temporelles pour quelques voxels adjacents de l'image originelle. C - Image débruitée (convolution avec une gaussienne de FWHM = 6mm). D - Série temporelle débruitée. E - Image après passage d'une filtre passe-bas. La valeur moyenne (fréquence nulle) représentant l'information structurelle est perdue. F - Série temporelle de l'image filtrée. G - Corrélation point à point (seuillé à $\rho > 0.5$). H - Séries temporelles pour quelques voxels adjacents de l'image reconstruite. Position du point sélectionné: x = 22, y = 13, z = 24. Les séries temporelles rouge représentent le signal idée. Celles en noir représentent le signal mesuré/transformées.}
+\begin{figure}
    \centering
    \includegraphics[height=0.85\textheight]{fmri_reconstruction}
+      \caption{\label{fmri_reconstruction} A - Image originelle. B - Séries temporelles pour quelques voxels adjacents de l'image originelle. C - Image débruitée spatialement (convolution avec une gaussienne de FWHM = 6mm). D - Série temporelle débruitée. E - Image après passage d'une filtre passe-bas temporel. La valeur moyenne (fréquence nulle) représentant l'information structurelle est perdue. F - Série temporelle de l'image filtrée. G - Corrélation point à point (seuillé à $\rho > 0.5$). H - Séries temporelles pour quelques voxels adjacents de l'image reconstruite. Position du point sélectionné: x = 22, y = 13, z = 24. Les séries temporelles rouges représentent le signal idéal. Celles en noir représentent le signal mesuré/transformé.}
 \end{figure}
 
 
 \subsection{Segmentation}
 
-On a effectué la segmentation des zones d'activation à l'aide de l'outil graphique d'AFNI, de manière à trouver les paramètres idéaux en fonction des zones qu'on voulait voir activer. Puisque la tâche Roland est une tâche requérant des fonctions motrices, et mémoire et de vision, on s'attend à voir \og allumer \fg~ 6 zones reliées à ces activités. Les tâches motrices sont principalement localisées dans le cortex moteur (gyrus précentral). La mémoire est principalement localisée dans l'hippocampe. La vision est principalement localisée dans le cortex occipital. Nous nous sommes donc servis de nos connaissances anatomiques \emph{a priori} pour réaliser la segmentation et le regroupement des voxels activés (\emph{clustering}).
+On a effectué la segmentation des zones d'activation à l'aide de l'outil graphique d'AFNI, de manière à trouver les paramètres idéaux en fonction des zones que l'on s'attendait à voir activées. Puisque la tâche Roland est une tâche requérant des fonctions motrices, de mémoire et de vision, on s'attend à voir \og allumer \fg~ 6 zones reliées à ces activités. Les tâches motrices sont principalement localisées dans le cortex moteur (gyrus précentral). La mémoire est principalement localisée dans l'hippocampe. La vision est principalement localisée dans le cortex occipital. Nous nous sommes donc servis de nos connaissances anatomiques \emph{a priori} pour réaliser la segmentation et le regroupement des voxels activés (\emph{clustering}).
 
-L'étape de segmentation dans le script \emph{Q1\_IRMf.sh} réalise l'opération de seuillage et de regroupement automatiquement, donnant 7 régions distinctes, dont chaqu'une est étiquetée avec une valeur diffénte:
+L'étape de segmentation dans le script \lstinline{Q1\_IRMf.sh} réalise l'opération de seuillage et de regroupement automatiquement. Elle donne sept régions distinctes, chacune d'entre elles étant étiquetée avec une valeur différente:
 	
 \begin{enumerate}
     \item Lobe occipital droit (vision)
@@ -91,9 +91,9 @@ La fonction \lstinline{Q2_IRMd.compAdcAndFa} calcule l'ADC et la FA à partir d'
 \end{figure}
 
 \subsection{Tractographie}
-La fonction \lstinline{Q2_IRMd.tracking} effectue une tractographie déterministe sur un champ de tenseurs. 
+La fonction \lstinline{Q2_IRMd.tracking} effectue une tractographie déterministe sur un champ de tenseurs. Les paragraphes suivants expliquent quelques enjeux importants de cette fonction.
 
-\paragraph{À quelle étape interpoler?} Lors de l'implémentation de la fonction, nous avons dû prendre une décision concernant la question suivante: \textit{quel champ doit être interpolé à chaque pas de la tractographie?} Nous avons considéré les options présentées dans le tab. \ref{tracto_interp}. Ces options ont toutes des avantages et des inconvénients: plus le nombres d'éléments à interpoler et le nombre de calculs à faire avant d'arriver à une direction de propagation sont grands, plus le temps de calcul total de l'algorithme sera grand. Cependant, comme on le voit dans le tab. \ref{tracto_interp}, la précision possible du résultat final diminue lorsque la vitesse de calcul augmente. Il en est ainsi car en général, ce qui permet d'interpoler moins d'éléments génère une perte d'information précédant l'interpolation (les transformées effectuées ne sont en effet pas réversibles). Les interpolations faites par la suite risquent donc d'être moins précises. Nous avons choisi une méthode qui semblait être un compromis entre temps de calcul et précision possible, soit \textbf{l'interpolation des tenseurs}. Nous n'avons cependant pas eu le temps de tester l'impact réel sur les temps de calcul et la précision des résultats.
+\paragraph{À quelle étape interpoler?} Tout d'abord, lors de l'implémentation de la tractographie, nous avons dû prendre une décision concernant la question suivante: \textit{quel champ doit être interpolé à chaque pas de la tractographie?} Nous avons considéré les options présentées dans le tab. \ref{tracto_interp}. Ces options ont toutes des avantages et des inconvénients: plus le nombres d'éléments à interpoler et le nombre de calculs à faire avant d'arriver à une direction de propagation sont grands, plus le temps de calcul total de l'algorithme sera grand. Cependant, comme on le voit dans le tab. \ref{tracto_interp}, la précision possible du résultat final augmente aussi lorsque ces nombres augmentent. Il en est ainsi car en général, ce qui permet d'interpoler moins d'éléments génère une perte d'information précédant l'interpolation (les transformées effectuées ne sont en effet pas réversibles). Les interpolations faites par la suite risquent donc d'être moins précises. Nous avons choisi une méthode qui semblait être un compromis entre temps de calcul et précision possible, soit \textbf{l'interpolation des tenseurs}. Nous n'avons cependant pas eu le temps de tester l'impact réel sur les temps de calcul et la précision des résultats.
 
 \begin{table}
 \begin{center}

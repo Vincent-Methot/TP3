@@ -13,7 +13,7 @@
 # Extraction du cerveau (fsl-bet). Permet d'obenir une image plus petite
 # et de minimiser le temps de calcul des opérations subséquentes.
 
-bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
+fsl5.0-bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
 
 # Lissage spatial. Convolue l'image fmri.nii à chaque temps avec une
 # gaussienne de FWHM = 6 mm.
