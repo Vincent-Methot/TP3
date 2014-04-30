@@ -1,5 +1,6 @@
 import nibabel as nib
 import numpy as np
+from dipy.segment.mask import median_otsu
 import Q2_IRMd
 
 dmri = nib.load('Data/dmri.nii')
@@ -7,29 +8,18 @@ data = dmri.get_data()
 hdr = dmri.get_header()
 affine = dmri.get_affine()
 data_dtype = dmri.get_data_dtype()
-b0 = data[...,0]
-B0 = nib.Nifti1Image(b0, affine)
-nib.save(B0, 'Data/b0.nii.gz')
 
-# Extraction du cerveau dans fsl
-# bet Data/b0.nii.gz Data/b0_bet.nii.gz -m
-
-mask = nib.load('Data/b0_bet_mask.nii.gz').get_data()
-data_brain = np.empty(data.shape)
-
-# Pas la meilleure façon de faire, mais la plus simple...
-for i in range(data.shape[-1]):
-	data_brain[..., i] = data[..., i] * mask
-
-dmri_brain = nib.Nifti1Image(data_brain.astype(data_dtype), affine)
-nib.save(dmri_brain, 'Data/dmri_brain.nii.gz')
+data_mask, mask = median_otsu(data, 2, 1)
+nib.save(nib.Nifti1Image(data_mask[...,0], affine), 'Data/b0.nii.gz')
+nib.save(nib.Nifti1Image(data_mask, affine, hdr), 'Data/dmri_brain.nii.gz')
+nib.save(nib.Nifti1Image(mask, affine), 'Data/dmri_mask.nii.gz')
 
 # Création de dmri_petit et dmri_mini
 
-data_petit = data[30:95, 20:100, 0:55, :]
+data_petit = data_mask[30:95, 20:100, 0:55, :]
 dmri_petit = nib.Nifti1Image(data_petit, affine)
 nib.save(dmri_petit, 'Data/dmri_petit.nii.gz')
-data_mini = data[50:70, 50:70, 20:40, :]
+data_mini = data_mask[50:70, 50:70, 20:40, :]
 dmri_mini = nib.Nifti1Image(data_mini, affine)
 nib.save(dmri_mini, 'Data/dmri_mini.nii.gz')
 
