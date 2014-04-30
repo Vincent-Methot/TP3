@@ -12,7 +12,7 @@ from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel
 from dipy.reconst.peaks import peaks_from_model
 from dipy.data import get_sphere
 
-# Constrained Sperical Harmonics Reconstruction
+# Constrained Spherical Harmonics Reconstruction
 
 dmri = nib.load('Data/dmri.nii')
 data = dmri.get_data()
@@ -22,7 +22,7 @@ gtab = gradient_table(grad_dir[:, 3], grad_dir[:, :3])
 response, ratio = auto_response(gtab, data, roi_radius=10, fa_thr=0.7)
 csd_model = ConstrainedSphericalDeconvModel(gtab, response)
 
-data_mini = data[32:96, 32:96, 35, :]
+data_mini = data[50:70, 50:70, 20:40, :]
 csd_fit = csd_model.fit(data_mini)
 
 #csd_fit = csd_model.fit(data)
