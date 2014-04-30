@@ -52,4 +52,4 @@ bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
 
 ##############################################################################
 
-# Partie c - Création de figures
+# Partie c - Création de figures (dans le fibernavigator)
