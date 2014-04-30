@@ -37,6 +37,18 @@ bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
 ##############################################################################
 
 # Partie b - Segmentation et étiquetage des zones d'activation
+3dclust -savemask Data/fmri_clusters.nii.gz -1Dformat -nosum -1dindex 0 \
+-1tindex 0 -1noneg -2thresh -0.5149 0.5149 -dxyz=1 1.01 50 Data/fmri_corr.nii.gz
+
+# On obtient les différentes régions d'activation, portant les étiquettes:
+#
+# 1 - Aire visuelle droite
+# 2 - Aire visuelle gauche
+# 3 - Hippocampe gauche
+# 4 - Hippocampe droit
+# 5 - Cortex moteur droit
+# 6 - Artéfact hors du cerveau
+# 7 - Cortex moteur gauche
 
 ##############################################################################
 
