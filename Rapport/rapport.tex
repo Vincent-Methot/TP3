@@ -190,7 +190,11 @@ Dans le corps calleux, les fibres sont majoritairement dans la même direction, 
 L'ADC est une mesure effective du coefficient de diffusion. Lorsqu'elle est nulle, les molécules d'eau sont à l'arrêt. Plus elle est élevée, plus l'eau peut voyager loin en peu de temps. L'ADC possède ici des valeurs entre 0 et 0.0038 mm$^2$/sec (les unités inverses de la b-value) dont les plus basses se retrouvent un peu partout dans la matière blanche (très structurée) et la plus haute dans le liquide céphalo-rachidien. Les croisements ne semblent pas avoir d'impact sur l'ADC, qui est de l'ordre de 0.001 autant dans les zones de croisement que dans le corps calleux.
 
 \subsection{Tractographie avec Dipy}
+Pour effectuer la tractographie sur un champ de fODFs avec Dipy, nous avons tenté de suivre l'exemple \textit{Reconstruction with Constrained Spherical Deconvolution} présenté dans la documentation de Dipy en ligne [http://nipy.org/dipy/examples\_built/reconst\_csd.html\#example-reconst-csd].
 
+Nous avons été capable d'effectuer une tractographie sur une partie de notre image d'IRMd de taille 20x20x20 (fig. \ref{} et script \lstinline{Q4_bonus.py}). Cependant, pour l'image IRMd complète, le temps de calcul du champ de fODF était de plus de 5 heures (le temps exact nous est en fait inconnu, car nous n'avons pas eu le temps d'attendre la fin du calcul).
+
+Il resterait donc à optimiser le code ébauché pour accélérer les calculs (p. ex. parallélisation). Aussi, il serait possible d'essayer une tractographie avec un champ d'ODF demandant moins de temps de calcul que celui de l'exemple utilisé.
 
 
 \end{document}
