@@ -11,6 +11,7 @@ from dipy.reconst.csdeconv import auto_response
 from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel
 from dipy.reconst.peaks import peaks_from_model
 from dipy.data import get_sphere
+from dipy.segment.mask import median_otsu
 
 # Constrained Spherical Harmonics Reconstruction
 
@@ -21,6 +22,10 @@ gtab = gradient_table(grad_dir[:, 3], grad_dir[:, :3])
 
 response, ratio = auto_response(gtab, data, roi_radius=10, fa_thr=0.7)
 csd_model = ConstrainedSphericalDeconvModel(gtab, response)
+
+maskdata, mask = median_otsu(data, 3, 1, True,
+                             vol_idx=range(10, 50), dilate=2)
+
 
 <<<<<<< HEAD
 data_mini = data[32:96, 32:96, 30:40, :]
@@ -42,7 +47,6 @@ csd_peaks = peaks_from_model(model=csd_model,
                              parallel=True)
 
 # Tracking with EuDX
-
 from dipy.tracking.eudx import EuDX
 eu = EuDX(csd_peaks.gfa,
           csd_peaks.peak_indices[..., 0],
@@ -55,5 +59,6 @@ hdr['voxel_size'] = (2., 2., 2.)
 hdr['voxel_order'] = 'LAS'
 hdr['dim'] = csd_peaks.gfa.shape[:3]
 csa_streamlines_trk = ((sl, None, None) for sl in csa_streamlines)
+hdr['n_count'] = 10000
 csa_sl_fname = 'Data/csd_streamline.trk'
 nib.trackvis.write(csa_sl_fname, csa_streamlines_trk, hdr, points_space='voxel')
