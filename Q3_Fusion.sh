@@ -50,4 +50,18 @@ WarpImageMultiTransform 3 Data/fmri_clusters.nii.gz \
 Data/fmri_clusters_to_t1.nii.gz -R t1_bet.nii.gz \
 Data/fmri_trans/fmri_to_t1Warp.nii.gz Data/fmri_trans/fmri_to_t1Affine.txt \
 --use-NN
-
+# Séparation des clusters obtenus en 7 volumes distincts, pour visu du Fiber.
+fsl5.0-fslmaths Data/fmri_clusters_to_t1.nii.gz -thr 1 -uthr 1 -bin \
+Data/fmri_cluster1_to_t1.nii.gz
+fsl5.0-fslmaths Data/fmri_clusters_to_t1.nii.gz -thr 2 -uthr 2 -bin \
+Data/fmri_cluster2_to_t1.nii.gz
+fsl5.0-fslmaths Data/fmri_clusters_to_t1.nii.gz -thr 3 -uthr 3 -bin \
+Data/fmri_cluster3_to_t1.nii.gz
+fsl5.0-fslmaths Data/fmri_clusters_to_t1.nii.gz -thr 4 -uthr 4 -bin \
+Data/fmri_cluster4_to_t1.nii.gz
+fsl5.0-fslmaths Data/fmri_clusters_to_t1.nii.gz -thr 5 -uthr 5 -bin \
+Data/fmri_cluster5_to_t1.nii.gz
+fsl5.0-fslmaths Data/fmri_clusters_to_t1.nii.gz -thr 6 -uthr 6 -bin \
+Data/fmri_cluster6_to_t1.nii.gz
+fsl5.0-fslmaths Data/fmri_clusters_to_t1.nii.gz -thr 7 -uthr 7 -bin \
+Data/fmri_cluster7_to_t1.nii.gz

@@ -10,7 +10,7 @@
 \begin{document}
 \maketitle
 
-\section{IRM fonctionnelle}
+\section{IRM fonctionnelle \label{fmri}}
 
 Plusieurs outils d'analyse existent déjà pour traiter des données d'IRMf. Nous avons choisis de les utiliser directement plutôt que de les implémenter en python. Deux suites logicielles ont retenu notre intérêt (puisque nous les connaissions déjà), soit FSL [http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/] et AFNI [http://afni.nimh.nih.gov/], qu'il faudra avoir installé pour faire fonctionner le script associé à ce numéro (\lstinline{Q1\_IRMf.sh}).
 
@@ -42,7 +42,7 @@ La dernière étape de reconstruction consiste à calculer voxel par voxel une c
 \end{figure}
 
 
-\subsection{Segmentation}
+\subsection{Segmentation \label{fmri_seg}}
 
 On a effectué la segmentation des zones d'activation à l'aide de l'outil graphique d'AFNI, de manière à trouver les paramètres idéaux en fonction des zones que l'on s'attendait à voir activées. Puisque la tâche Roland est une tâche requérant des fonctions motrices, de mémoire et de vision, on s'attend à voir \og allumer \fg~ 6 zones reliées à ces activités. Les tâches motrices sont principalement localisées dans le cortex moteur (gyrus précentral). La mémoire est principalement localisée dans l'hippocampe. La vision est principalement localisée dans le cortex occipital. Nous nous sommes donc servis de nos connaissances anatomiques \emph{a priori} pour réaliser la segmentation et le regroupement des voxels activés (\emph{clustering}).
 
@@ -152,6 +152,16 @@ Pour recaler l'IRMf sur la T1, nous avons utiliser la même approche que pour l'
 \end{figure}  
 
 \subsection{Connectivité des zones fonctionnelles}
+Pour étudier la connectivité des zones fonctionnelles, nous avons chargé dans le Fibernavigator les tenseurs, les zones d'activation (en binaire) et l'image T1 après recalage. Toujours dans le Fibernavigator, nous ensuite avons lancé des tractographies déterministes avec des graines à la surface de chacune des zones d'activation identifiées dans la \ref{fmri_seg}. En plaçant les graines sur la surface d'une seule zone à la fois, il nous était possible de voir à quelles autres zones elle étaie connectée. Les réseaux de fibres ainsi obtenus sont présentés sur la fig. \ref{fusion_dti}. Les principaux paramètres de tractographie utilisés sont un seuil sur la matière blanche de 0.20, un angle maximal de $\pi/3$ et un pas de 1mm.
+
+\begin{figure}
+\begin{center}
+\includegraphics[height=.8\textheight]{fusion_dti}
+\caption{Réseaux de fibres obtenus en plaçant des graines à la surface de chacune des zones d'activation identifiées à la \ref{fmri}. Les surfaces colorées (une par sous-image) sont les zones d'activation à partir desquelles la tractographie était lancée. Les surfaces blanches représentent toutes les autres zones d'activation. Les numéros des sous-images correspondent aux numéros des régions identifiées à la \ref{fmri}.\ref{fmri_seg}. 	\label{fusion_dti}}
+\end{center}
+\end{figure}
+
+De façon qualitative, on remarque que les deux lobes occipitaux (région 1 et 2) sont connectés aux deux régions de l'hippocampe (région 3 et 4) de façon importante. Quelques fibres relient les lobes occipitaux entre eux, mais elles ne sont pas très nombreuses. Les deux régions de l'hipocampe semblent quant à elles fortement liées entre elles. Les gyrus précentraux (régions 5 et 7) ne semblent pas fortement connectés à d'autres régions activées, si ce n'est que légèrement à leur lobe occipital ipsilatéral. Comme nous pouvions nous y attendre, la région 6, qui était un artéfact, n'est reliée à aucune autre zone.
 
 \section{Bonus}
 
