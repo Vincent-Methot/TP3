@@ -13,7 +13,7 @@
 # Extraction du cerveau (fsl-bet). Permet d'obenir une image plus petite
 # et de minimiser le temps de calcul des opérations subséquentes.
 
-bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
+fsl5.0-bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
 
 # Lissage spatial. Convolue l'image fmri.nii à chaque temps avec une
 # gaussienne de FWHM = 6 mm.
@@ -52,13 +52,9 @@ bet Data/fmri.nii Data/fmri_bet.nii.gz -F -f 0.6
 
 ##############################################################################
 
-<<<<<<< HEAD
-# Partie c - Création de figures (dans le fibernavigator)
-=======
 # Partie c - Création de figures
 
 # Calcul de l'image moyenne de fmri.nii pour des fins de visualisation dans
 # le fibernavigator.
 
 3dTstat -mean -prefix Data/fmri_mean.nii.gz Data/fmri_bet.nii.gz 
->>>>>>> 927fc1435932d559019a41cb81fb6fdc60a0684a
