@@ -62,7 +62,23 @@ La méthode de segmentation utilisée consiste en un seuillage simple des valeur
 
 \subsection{Zones d'activation}
 
+On retrouve sur la Fig. \ref{fmri_2d} une projection des zones d'activation. On remarque en bas les zones visuelles (gauche et droite) et au centre les zones motrices (gauche et droite). Les zones reliées à la mémoire ne sont pas affichées par soucis de clarté de l'image. L'hippocampe gauche est toutefois visible sur la Fig. \ref{fmri_3d}, une capture d'écran 3d des zones d'activation. La région isolée à l'avant du cerveau n'est qu'un artéfact. On a créé ces deux images dans le fibernavigator.
 
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.6\textwidth]{fmri_2d}
+\caption{Projection 2d des zones d'activation reconstruites dans le fibernavigator. En bas, zones visuelles gauche et droite. Au centre, zones motrices gauche et droite. Les hippocampes ne sont pas affichées pas soucis de clarté de l'image.
+\label{fmri_2d}}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=0.6\textwidth]{fmri_3d}
+\caption{Capture d'écran 3d des zones d'activation reconstruites dans le fibernavigator. En bas, artéfact de la reconstruction. Comparée à l'image de la Fig.\ref{fmri_2d}, on voit apparaître l'hippocampe gauche (la région la plus au centre).
+\label{fmri_3d}}
+\end{center}
+\end{figure}
 
 \section{IRM de diffusion}
 
@@ -173,9 +189,8 @@ Dans le corps calleux, les fibres sont majoritairement dans la même direction, 
 
 L'ADC est une mesure effective du coefficient de diffusion. Lorsqu'elle est nulle, les molécules d'eau sont à l'arrêt. Plus elle est élevée, plus l'eau peut voyager loin en peu de temps. L'ADC possède ici des valeurs entre 0 et 0.0038 mm$^2$/sec (les unités inverses de la b-value) dont les plus basses se retrouvent un peu partout dans la matière blanche (très structurée) et la plus haute dans le liquide céphalo-rachidien. Les croisements ne semblent pas avoir d'impact sur l'ADC, qui est de l'ordre de 0.001 autant dans les zones de croisement que dans le corps calleux.
 
-
-
 \subsection{Tractographie avec Dipy}
+
 
 
 \end{document}
