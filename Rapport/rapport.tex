@@ -130,7 +130,7 @@ Direction du vecteur principal & 2 & 0 & \textcolor{green}{Haute} & \textcolor{r
 Nous voulions en effet recaler les images sur celle qui représentait le plus fidèlement et le plus précisément la réalité, ce qui était reflété par ces caractristiques. L'espace choisi a donc évidemment été l'espace de l'image T1.
 
 \paragraph{Outil}
-Tout d'abord, mentionnons que pour l'IRMd, nous avons recalé l'image à $b=0$ sur l'image T1, C'est en effet elle qui possédait le plus haut SNR et se rapprochait le plus d'une image anatomique habituelle. En IRMf, nous avons recalé la moyenne temporelle du signal sur l'image T1 afin de maximiser le SNR de l'image recalée. De plus, pour les deux volumes recalés, nous avons remarqué que le processus était grandement facilitée si les cerveaux étaient \og extraits \fg  avant le recalage. Nous avons donc appliqué la fonction \lstinline{fsl5.0-bet} sur tous les volumes avant le recalage, avec des paramètres permettant une bonne extraction du cerveau.
+Tout d'abord, mentionnons que pour l'IRMd, nous avons recalé l'image à $b=0$ sur l'image T1, C'est en effet elle qui possédait le plus haut SNR et se rapprochait le plus d'une image anatomique habituelle. En IRMf, nous avons recalé la moyenne temporelle du signal sur l'image T1 afin de maximiser le SNR de l'image recalée. De plus, pour les deux volumes recalés, nous avons remarqué que le processus était grandement facilité si les cerveaux étaient \og extraits \fg~ avant le recalage. Nous avons donc appliqué la fonction \lstinline{fsl5.0-bet} sur tous les volumes avant le recalage, avec des paramètres permettant une bonne extraction du cerveau.
 
 Ensuite, nous avons choisi le logiciel de recalage ANTS pour la grande variété des possibilités qu'il offre de même que pour sa réputation. Étant donné les différences importantes entre les pondérations des images recalées, les mesures de similarité que nous avons envisagées sont l'information mutuelle (IM) et la corrélation-croisée (CC). 
 
@@ -166,6 +166,14 @@ De façon qualitative, on remarque que les deux lobes occipitaux (région 1 et 2
 \section{Bonus}
 
 \subsection{FA et ADC}
+
+La FA est une mesure d'anisotropie du tenseur. Une FA de 0 représente un tenseur isotrope (une sphère) alors qu'une FA de 1 représente un tenseur complètement anisotropique dans une direction (un aiguille). Ainsi, on trouve ainsi une FA minimale de 0 dans les ventricules, où il n'y a aucune structure (et la diffusion est isotrope), alors qu'une FA maximale de 0.996 est visible dans le corps calleux, une struture très anisotrope.
+
+Dans le corps calleux, les fibres sont majoritairement dans la même direction, et on y retrouve des valeurs de FA entre 0.65 et 0.996. Dans les zones de croisement de fibre, on observe une baisse de la FA (entre 0.4 et 0.6). Ceci s'explique par l'incapacité du tenseur à bien modéliser les croisements de fibre. Comme le calcul de la FA n'implique que l'amplitude de diffusion dans les trois directions principales, cette mesure se voit irrémédiablement réduire dans les zones de croisement.
+
+L'ADC est une mesure effective du coefficient de diffusion. Lorsqu'elle est nulle, les molécules d'eau sont à l'arrêt. Plus elle est élevée, plus l'eau peut voyager loin en peu de temps. L'ADC possède ici des valeurs entre 0 et 0.0038 mm$^2$/sec (les unités inverses de la b-value) dont les plus basses se retrouvent un peu partout dans la matière blanche (très structurée) et la plus haute dans le liquide céphalo-rachidien. Les croisements ne semblent pas avoir d'impact sur l'ADC, qui est de l'ordre de 0.001 autant dans les zones de croisement que dans le corps calleux.
+
+
 
 \subsection{Tractographie avec Dipy}
 
