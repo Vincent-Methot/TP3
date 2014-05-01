@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import nibabel as nib
 import numpy as np
 import Q2_IRMd
@@ -23,7 +26,8 @@ data_brain = np.empty(data.shape)
 for i in range(data.shape[-1]):
     data_brain[..., i] = data[..., i] * mask
 
-dmri_brain = nib.Nifti1Image(data_brain.astype(data_dtype), affine)
+data_brain = data_brain.astype(data_dtype)
+dmri_brain = nib.Nifti1Image(data_brain, affine)
 nib.save(dmri_brain, 'Data/dmri_brain.nii.gz')
 
 # Création de dmri_petit et dmri_mini
