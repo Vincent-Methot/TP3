@@ -12,7 +12,7 @@
 
 \section{IRM fonctionnelle}
 
-Plusieurs outils d'analyse existent déjàpour traiter des données d'IRMf. Nous avons choisis de les utiliser directement plutôt que de les implémenter en python. Deux suites logicielles ont retenu notre intérêt (puisque nous les connaissons déjà), soit FSL [http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/] et AFNI [http://afni.nimh.nih.gov/], qu'il faudra avoir installé pour faire fonctionner le script associé à ce numéro (Q1\_IRMf.sh).
+Plusieurs outils d'analyse existent déjà pour traiter des données d'IRMf. Nous avons choisis de les utiliser directement plutôt que de les implémenter en python. Deux suites logicielles ont retenu notre intérêt (puisque nous les connaissons déjà), soit FSL [http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/] et AFNI [http://afni.nimh.nih.gov/], qu'il faudra avoir installé pour faire fonctionner le script associé à ce numéro (Q1\_IRMf.sh).
 
 \subsection{Étapes de reconstruction}
 
@@ -67,27 +67,103 @@ La méthode de segmentation utilisée consiste en un seuillage simple des valeur
 \section{IRM de diffusion}
 
 \subsection{Estimation des tenseurs}
+La fonction \lstinline{Q2_IRMd.tenseur} utilise la méthode de la pseudo-inverse pour effectuer le calcul des tenseurs. Elle peut prendre en entrée un masque qui indique pour quels voxels calculer les tenseurs. Sont également mis à 0 tous les éléments de tenseurs qui:
+\begin{enumerate}
+\item Correspondent à un signal à $b=0$ nul.
+\item Prennent une valeur NaN ou Inf. 
+\end{enumerate}
+La fig. \ref{tenseurs_fiber} illustre les tenseurs que nous avons ainsi obtenus sur une carte de FA (calculée grâce à l'alogrithme présenté dans la section suivante).
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.22]{tenseurs_fiber}
+\caption{Illustration dans le Fibernavigator des tenseurs que nous avons obtenus grâce à la fonction \lstinline{Q2_IRMd.tenseur}. Les tenseurs sont superposés à la FA. À noter que seule une région identifiée comme étant le cerveau grâce à l'algorithme \lstinline{BET} de FSL est présentée. \label{tenseurs_fiber}}
+\end{center}
+\end{figure}
 
 \subsection{FA et ADC}
+La fonction \lstinline{Q2_IRMd.compAdcAndFa} calcule l'ADC et la FA à partir d'un champ de tenseur tel que calculé par la fonction \lstinline{Q2_IRMd.tenseur}. La fig. \ref{adc_fa} illustre pour certaines tranches l'ADC et la FA, respectivement. Les unités de l'ADC sont les mêmes que celles du coefficients de diffusion, soit $[longueur]^2/[temps]$, alors que la FA est sans unité.
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.9]{adc_fa}
+\caption{ADC et FA pour une tranche axiale du volume d'IRMd.\label{adc_fa}}
+\end{center}
+\end{figure}
 
 \subsection{Tractographie}
+La fonction \lstinline{Q2_IRMd.tracking} effectue une tractographie déterministe sur un champ de tenseurs. 
 
+\paragraph{À quelle étape interpoler?} Lors de l'implémentation de la fonction, nous avons dû prendre une décision concernant la question suivante: \textit{quel champ doit être interpolé à chaque pas de la tractographie?} Nous avons considéré les options présentées dans le tab. \ref{tracto_interp}. Ces options ont toutes des avantages et des inconvénients: plus le nombres d'éléments à interpoler et le nombre de calculs à faire avant d'arriver à une direction de propagation sont grands, plus le temps de calcul total de l'algorithme sera grand. Cependant, comme on le voit dans le tab. \ref{tracto_interp}, la précision possible du résultat final diminue lorsque la vitesse de calcul augmente. Il en est ainsi car en général, ce qui permet d'interpoler moins d'éléments génère une perte d'information précédant l'interpolation (les transformées effectuées ne sont en effet pas réversibles). Les interpolations faites par la suite risquent donc d'être moins précises. Nous avons choisi une méthode qui semblait être un compromis entre temps de calcul et précision possible, soit \textbf{l'interpolation des tenseurs}. Nous n'avons cependant pas eu le temps de tester l'impact réel sur les temps de calcul et la précision des résultats.
 
+\begin{table}
+\begin{center}
+\begin{tabular}{C{.3\textwidth}|C{.1\textwidth}|C{.1\textwidth}|C{.15\textwidth}|C{.15\textwidth}}
+\textbf{Champ interpolé} & \textbf{Nb d'interp.} & \textbf{Nb de calculs} & \textbf{Vitesse de calcul}  & \textbf{Précision possible}\\ \hline
+Mesures d'IRMd & 64 & 3 & \textcolor{red}{Basse} & \textcolor{green}{Haute} \\
+Tenseurs avant (après) décomposition & 6 & 2 (1)& \textcolor{yellow}{Moyenne} & \textcolor{yellow}{Moyenne} \\
+Direction du vecteur principal & 2 & 0 & \textcolor{green}{Haute} & \textcolor{red}{Basse}
+\end{tabular}
+\end{center}
+\caption{Champs pouvant être interpolés lors d'un pas de tractographie, avec le nombre d'éléments devant être interpolés pour chacun d'entre eux (colonne 2) ainsi que le nombre de calculs manquants avant d'arriver à une direction de propagation (colonne 3). Plus ces nombres sont grands, plus le temps de calcul est grand. Cependant, en descendant dans les rangées du tableau, de l'information est également perdue avant l'interpolation. Ceci pourrait rendre l'interpolation moins précise. \label{tracto_interp}}
+\end{table}
 
+\paragraph{Méthode d'interpolation} La méthode d'interpolation a un impact crucial sur la vitesse de notre algorithme. Nous avons essayé les méthodes: plus proche voisin, linéaire et spline de degré $n$, avec $n$ allant de 2 à 5. Avec une méthode plus complexe que la méthode linéaire, l'interpolation devenait très visiblement le goulot d'étranglement de la vitesse de notre algorithme. Cependant, cela n'a pas causé d'amélioration apparente de la qualité de notre tractographie. Les autres résultats présentés dans ce rapport ont donc été obtenus avec avec la méthode d'interpolation linéaire. 
+
+\paragraph{Résultats} La figure \ref{tracking} illustrent des fibres obtenues pour différents pas et différents seuil sur la FA, avec 10000 graines placées aléatoirement.
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=.3]{tracking}
+\caption{Fibres obtenues avec 10000 graines placées aléatoirement pour différentes valeurs de pas et de seuil sur la FA visualisées dans le Fibernavigator et superposées à l'image à $b=0$. On voit bien une augmentation du nombre et de la longueur des fibres lorsque le seuil diminue. Cela est particulièrement visible dans le cervelet. Le pas ne semble pour sa part pas avoir une influence majeure sur l'apparence des fibres. \label{tracking}}
+\end{center}
+\end{figure}
 
 \section{Fusion}
 
 \subsection{Justification}
+\paragraph{Espace de recalage}Pour choisir l'espace de référence dans lequel effectuer les recalages, nous avons cherché l'espace de l'image qui détenait
+\begin{enumerate}
+\item La meilleure résolution
+\item Le moins d'artéfacts
+\item Le plus haut SNR
+\end{enumerate}
+Nous voulions en effet recaler les images sur celle qui représentait le plus fidèlement et le plus précisément la réalité, ce qui était reflété par ces caractristiques. L'espace choisi a donc évidemment été l'espace de l'image T1.
+
+\paragraph{Outil}
+Tout d'abord, mentionnons que pour l'IRMd, nous avons recalé l'image à $b=0$ sur l'image T1, C'est en effet elle qui possédait le plus haut SNR et se rapprochait le plus d'une image anatomique habituelle. En IRMf, nous avons recalé la moyenne temporelle du signal sur l'image T1 afin de maximiser le SNR de l'image recalée. De plus, pour les deux volumes recalés, nous avons remarqué que le processus était grandement facilité si les cerveaux étaient \og extraits \fg~ avant le recalage. Nous avons donc appliqué la fonction \lstinline{fsl5.0-bet} sur tous les volumes avant le recalage, avec des paramètres permettant une bonne extraction du cerveau.
+
+Ensuite, nous avons choisi le logiciel de recalage ANTS pour la grande variété des possibilités qu'il offre de même que pour sa réputation. Étant donné les différences importantes entre les pondérations des images recalées, les mesures de similarité que nous avons envisagées sont l'information mutuelle (IM) et la corrélation-croisée (CC). 
+
+Pour recaler l'IRMd sur la T1, nous avons d'abord essayé une transformation affine (il est toujours bon d'essayer une méthode plus simple pour commencer). Les résultats étaient déjà relativement prometteurs, mais quelques éléments de l'image ne semblaient pas encore parfaitement recalés, peut-être en raison d'artéfacts (fig. \ref{b0-to-t1}). Nous avons donc essayé quelques combinaisons de recalage non-linéaire qu'offrait ANTS. Après inspection visuelle des résultats, nous avons subjectivement arrêté notre choix sur le recalage avec une CC de rayon 4, une transformation de type élastique avec un pas de gradient de 3, une régularisation gaussienne sur le gradient de la transformation de paramètres 0.5 et 3 et des nombres d'itérations de 30, 20 et 10 sur les échelles de résolution x/4, x/2 et x, avec x la résolution initiale (en langage ANTS, \lstinline{-m CC[...,1,4] -t Elast[3] -i 30x20x10 -r Gauss[0.5,3]}. Les résultats sont illustrés sur la fig. \ref{b0-to-t1}.
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.5]{b0-to-t1}
+\caption{Recalage de l'image d'IRMd à $b=0$ (en rouge) sur l'image T1 à l'aide d'une transformation affine (ligne 2) et d'une transformation non linéaire avec ANTS utilisant les paramètres suivants en langage ANTS: \lstinline{-m CC[...,1,4] -t Elast[3] -i 30x20x10 -r Gauss[0.5,3]}. \label{b0-to-t1}}
+\end{center}
+\end{figure}  
+
+Pour recaler l'IRMf sur la T1, nous avons utiliser la même approche que pour l'IRMd. L'image d'IRMf présentait cependant une résolution spatiale encore plus faible que l'IRMd, et son SNR semblait aussi assez faible. Il était donc plus difficile de qualifier le recalage. Nous avons finalement arrêté notre choix sur la même méthode de recalage non linéaire que pour l'IRMd. Les résultats sont illustrés sur la fig. \ref{fmri-to-t1}
+
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.5]{fmri-to-t1}
+\caption{Image T1 (rangée 1) et recalage non linéaire de l'image d'IRMf moyennée dans le temps (en rouge, rangée 2) sur l'image T1 effectué avec ANTS avec les paramètres suivants, en langage ANTS: \lstinline{-m CC[...,1,4] -t Elast[3] -i 30x20x10 -r Gauss[0.5,3]}. \label{fmri-to-t1}}
+\end{center}
+\end{figure}  
 
 \subsection{Connectivité des zones fonctionnelles}
-
-
-
-
 
 \section{Bonus}
 
 \subsection{FA et ADC}
+
+La FA est une mesure d'anisotropie du tenseur. Une FA de 0 représente un tenseur isotrope (une sphère) alors qu'une FA de 1 représente un tenseur complètement anisotropique dans une direction (un aiguille). Ainsi, on trouve ainsi une FA minimale de 0 dans les ventricules, où il n'y a aucune structure (et la diffusion est isotrope), alors qu'une FA maximale de 0.996 est visible dans le corps calleux, une struture très anisotrope.
+
+Dans le corps calleux, les fibres sont majoritairement dans la même direction, et on y retrouve des valeurs de FA entre 0.65 et 0.996. Dans les zones de croisement de fibre, on observe une baisse de la FA (entre 0.4 et 0.6). Ceci s'explique par l'incapacité du tenseur à bien modéliser les croisements de fibre. Comme le calcul de la FA n'implique que l'amplitude de diffusion dans les trois directions principales, cette mesure se voit irrémédiablement réduire dans les zones de croisement.
+
+L'ADC est une mesure effective du coefficient de diffusion. Lorsqu'elle est nulle, les molécules d'eau sont à l'arrêt. Plus elle est élevée, plus l'eau peut voyager loin en peu de temps. L'ADC possède ici des valeurs entre 0 et 0.0038 mm$^2$/sec (les unités inverses de la b-value) dont les plus basses se retrouvent un peu partout dans la matière blanche (très structurée) et la plus haute dans le liquide céphalo-rachidien. Les croisements ne semblent pas avoir d'impact sur l'ADC, qui est de l'ordre de 0.001 autant dans les zones de croisement que dans le corps calleux.
+
+
 
 \subsection{Tractographie avec Dipy}
 

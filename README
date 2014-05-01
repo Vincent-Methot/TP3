@@ -7,7 +7,15 @@ Les scripts bash (Q1_IRMf.sh et Q3_Fusion.sh) sont écrits de telle sorte qu'ils
 
 
 À faire:
-
+========
 Faire un dossier Raw_Data et Processed_Data, je crois que c'est une bonne pratique
-Changer BET pour median_otsu dans preprocess.py
 
+
+Dépendances:
+============
+dipy
+FSL
+AFNI
+nibabel
+numpy
+scipy
