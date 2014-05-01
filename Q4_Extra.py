@@ -22,31 +22,16 @@ gtab = gradient_table(grad_dir[:, 3], grad_dir[:, :3])
 
 response, ratio = auto_response(gtab, data, roi_radius=10, fa_thr=0.7)
 csd_model = ConstrainedSphericalDeconvModel(gtab, response)
-
-maskdata, mask = median_otsu(data, 3, 1, True,
-                             vol_idx=range(10, 50), dilate=2)
-
-
-<<<<<<< HEAD
-data_mini = data[32:96, 32:96, 30:40, :]
-# csd_fit = csd_model.fit(data_mini)
-csd_fit = csd_model.fit(data)
-=======
-data_mini = data[50:70, 50:70, 20:40, :]
-csd_fit = csd_model.fit(data_mini)
-
-#csd_fit = csd_model.fit(data)
->>>>>>> 927fc1435932d559019a41cb81fb6fdc60a0684a
-
 sphere = get_sphere('symmetric724')
 csd_peaks = peaks_from_model(model=csd_model,
-                             data=data_mini,
+                             data=data,
                              sphere=sphere,
                              relative_peak_threshold=.5,
                              min_separation_angle=25,
                              parallel=True)
 
 # Tracking with EuDX
+
 from dipy.tracking.eudx import EuDX
 eu = EuDX(csd_peaks.gfa,
           csd_peaks.peak_indices[..., 0],

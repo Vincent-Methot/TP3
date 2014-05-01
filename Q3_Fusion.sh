@@ -2,9 +2,9 @@
 # Q3_Fusion.sh
 
 # Ce script reproduit les étapes importantes de recalage de la question 3 a. 
-# Cependant, , ces étapes sont souvent longues et exigeantes en ressources 
+# Cependant, ces étapes sont souvent longues et exigeantes en ressources 
 # computaionnelles. Il n'est donc pas recommandé de lancer le script en une 
-# seule fois, à moins de l'avoir bien acompris et analysé au préalable.
+# seule fois, à moins de l'avoir bien compris et analysé au préalable.
 
 
 # 1. Preprocessing
