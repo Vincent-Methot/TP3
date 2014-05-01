@@ -3,7 +3,7 @@ TP3
 
 TP3 - Jérémie Fouquet et Vincent Méthot - Cours IMN530 - UdeS
 
-Les scripts bash (Q1_IRMf.sh, preprocessing.py, Q3_Fusion.sh et Q4_Extra.py) sont écrits de telle sorte qu'ils doivent être lancés à partir de leur location (i.e, le dossier racine - TP3). Il est FORTEMENT RECOMMANDÉ à l'utilisateur de créer un dossier "Data" dans le dossier Racine (sinon rien ne va fonctionner) contenant les données du TP3.
+Les scripts bash (Q1_IRMf.sh, preprocessing.py, Q3_Fusion.sh et Q4_Extra.py) sont écrits de telle sorte qu'ils doivent être lancés à partir de leur localisation (i.e, le dossier racine - TP3). Il est FORTEMENT RECOMMANDÉ à l'utilisateur de créer un dossier "Data" dans le dossier Racine (sinon rien ne va fonctionner) contenant les données du TP3.
 
 Le rapport final se trouve à Rapport/rapport.pdf
 
@@ -12,6 +12,7 @@ Dépendances:
 dipy
 FSL
 AFNI
+ANTS
 nibabel
 numpy
 scipy
