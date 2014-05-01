@@ -11,6 +11,7 @@ from dipy.reconst.csdeconv import auto_response
 from dipy.reconst.csdeconv import ConstrainedSphericalDeconvModel
 from dipy.reconst.peaks import peaks_from_model
 from dipy.data import get_sphere
+from dipy.segment.mask import median_otsu
 
 # Constrained Spherical Harmonics Reconstruction
 
@@ -43,5 +44,6 @@ hdr['voxel_size'] = (2., 2., 2.)
 hdr['voxel_order'] = 'LAS'
 hdr['dim'] = csd_peaks.gfa.shape[:3]
 csa_streamlines_trk = ((sl, None, None) for sl in csa_streamlines)
+hdr['n_count'] = 10000
 csa_sl_fname = 'Data/csd_streamline.trk'
 nib.trackvis.write(csa_sl_fname, csa_streamlines_trk, hdr, points_space='voxel')
