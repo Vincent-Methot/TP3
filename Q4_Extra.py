@@ -21,14 +21,9 @@ gtab = gradient_table(grad_dir[:, 3], grad_dir[:, :3])
 
 response, ratio = auto_response(gtab, data, roi_radius=10, fa_thr=0.7)
 csd_model = ConstrainedSphericalDeconvModel(gtab, response)
-# csd_fit = csd_model.fit(data) # goumand en temps de calcul
-
-data_mini = data[50:70, 50:70, 20:40, :]
-csd_fit = csd_model.fit(data_mini)
-
 sphere = get_sphere('symmetric724')
 csd_peaks = peaks_from_model(model=csd_model,
-                             data=data_mini,
+                             data=data,
                              sphere=sphere,
                              relative_peak_threshold=.5,
                              min_separation_angle=25,
